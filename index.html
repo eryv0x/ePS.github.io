@@ -889,15 +889,20 @@ function generateExcelReport() {
 
         const csvContent = '\uFEFF' + rows.join(eol);
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `report-${dateKey}.csv`;
-        // Append anchor to DOM to ensure click() works in all browsers
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.style.display = 'none';
+        link.href = url;
+        link.download = `report-${dateKey}.csv`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        setTimeout(() => {
+            link.click();
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }, 50);
 
         // Show success notification
         const notification = document.createElement('div');
@@ -2320,6 +2325,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sum: 'Sum',
             manageProducts: 'Manage products',
             editProduct: 'Edit',
+            reportDownloadError: 'Failed to generate report',
         },
         bg: {
             settings: 'Настройки',
@@ -2420,7 +2426,8 @@ document.addEventListener('DOMContentLoaded', () => {
             productSavedSuccess: 'Продуктът е запазен успешно!',
             reportCopied: '✓ Докладът е копиран в клипборда!',
             reportDownloaded: '✓ Докладът е изтеглен!',
-            enter0ToClose: 'Въведете 0 за да затворите'
+            enter0ToClose: 'Въведете 0 за да затворите',
+            reportDownloadError: 'Не можа да се генерира доклад'
         }
     };
 
