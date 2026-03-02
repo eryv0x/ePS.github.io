@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ePS Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="language.js"></script>
+</head>
+<body>
+
+<div class="phone">
+    <div class="logo-wrapper">
+        <img src="epslogodarkmode.svg" alt="ePS logo">
+    </div>
+
+    <div class="login-header">
+        <h1 data-i18n="createAccount">Създайте акаунт</h1>
+        <p class="login-tagline" data-i18n="enterEmail">Въведете вашия имейл, за да се регистрирате.</p>
+    </div>
+
+    <div class="login-container">
+        <div class="field">
+                <div class="field-label" data-i18n="emailLabel">Имейл</div>
+            <div class="input-wrapper">
+                <div class="input-icon">✉️</div>
+                <input type="email" id="email" data-i18n-placeholder="emailPlaceholder" placeholder="email@example.bg" autocomplete="email">
+            </div>
+        </div>
+
+        <button class="primary-button" id="continueButton" data-i18n="continue">Продължи</button>
+
+        <div class="social-column">
+            <div class="social-btn" id="googleLogin">
+                <span class="social-icon">G</span>
+                <span data-i18n="continueWithGoogle">Продължи с Google</span>
+            </div>
+            <div class="social-btn" id="emailLogin">
+                <span class="social-icon">&#9993;</span>
+                <span data-i18n="continueWithEmail">Продължи с Email</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-info" data-i18n="bottomInfo">
+        Кликвайки продължи, вие се съгласявате с нашите<br>
+        <a href="#" data-i18n="terms">Условия на услугата</a> и <a href="#" data-i18n="privacy">Политика за поверителност</a>.
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('eps_theme')) {
+        localStorage.setItem('eps_theme', 'dark');
+    }
+    if (!localStorage.getItem('eps_language')) {
+        localStorage.setItem('eps_language', 'bg');
+    }
+
+    // Apply theme
+    const theme = localStorage.getItem('eps_theme') || 'dark';
+    document.body.classList.toggle('dark', theme === 'dark');
+    document.body.classList.toggle('light', theme === 'light');
+
+    // Translation map for this page
+    const translations = {
+        en: {
+            createAccount: 'Create an account',
+            enterEmail: 'Enter your email to sign up.',
+            emailLabel: 'Email',
+            emailPlaceholder: 'email@example.com',
+            continue: 'Continue',
+            continueWithGoogle: 'Continue with Google',
+            continueWithEmail: 'Continue with Email',
+            bottomInfo: 'By continuing you agree to our',
+            terms: 'Terms of Service',
+            privacy: 'Privacy Policy',
+            enterEmailAlert: 'Please enter your email address.'
+        },
+        bg: {
+            createAccount: 'Създайте акаунт',
+            enterEmail: 'Въведете вашия имейл, за да се регистрирате.',
+            emailLabel: 'Имейл',
+            emailPlaceholder: 'email@example.bg',
+            continue: 'Продължи',
+            continueWithGoogle: 'Продължи с Google',
+            continueWithEmail: 'Продължи с Email',
+            bottomInfo: 'Кликвайки продължи, вие се съгласявате с нашите',
+            terms: 'Условия на услугата',
+            privacy: 'Политика за поверителност',
+            enterEmailAlert: 'Моля, въведете вашия имейл адрес.'
+        }
+    };
+
+    function getCurrentLanguage() { return localStorage.getItem('eps_language') || 'en'; }
+
+    function translatePage() {
+        const lang = getCurrentLanguage();
+        const t = translations[lang] || translations.en;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (t[key]) el.textContent = t[key];
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (t[key]) el.placeholder = t[key];
+        });
+    }
+
+    // Check if user is already logged in
+    const userId = localStorage.getItem('eps_user_id');
+    const userName = localStorage.getItem('eps_user_name');
+    
+    if (userId && userName) {
+        // Already logged in, redirect to index
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    const continueButton = document.getElementById('continueButton');
+    const emailInput = document.getElementById('email');
+
+    if (continueButton && emailInput) {
+        continueButton.addEventListener('click', () => {
+            const email = emailInput.value.trim();
+            if (!email) {
+                const lang = getCurrentLanguage();
+                const t = translations[lang] || translations.en;
+                alert(t.enterEmailAlert);
+                return;
+            }
+            // Save user info and redirect to onboarding
+            localStorage.setItem('eps_user_email', email);
+            localStorage.setItem('eps_user_id', 'user_' + Date.now());
+            window.location.href = 'onboarding.html';
+        });
+    }
+
+    const googleLogin = document.getElementById('googleLogin');
+    if (googleLogin) {
+        googleLogin.addEventListener('click', () => {
+            // Start Google OAuth via Appwrite
+            const successUrl = encodeURIComponent('http://localhost:3000/onboarding.html');
+            const failureUrl = encodeURIComponent('http://localhost:3000/login.html');
+            window.location.href =
+                'https://fra.cloud.appwrite.io/v1/account/sessions/oauth2/google' +
+                '?project=6994aeb1000ab573753f' +
+                `&success=${successUrl}&failure=${failureUrl}`;
+        });
+    }
+
+    const emailLogin = document.getElementById('emailLogin');
+    if (emailLogin) {
+        emailLogin.addEventListener('click', () => {
+            emailInput?.focus();
+        });
+    }
+
+    // Initial translate
+    translatePage();
+
+    // Update when language changes from settings
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'eps_language') translatePage();
+    });
+});
+</script>
+
+</body>
+</html>
+

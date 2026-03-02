@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ePS</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="language.js"></script>
+</head>
+<body>
+  <div class="phone">
+    <div class="top-bar">
+      <div class="logo">
+        <img src="epslogodarkmode.svg" alt="ePS logo">
+        <div class="logo-text">EPS</div>
+      </div>
+      <div>
+        <div class="avatar" id="avatarInitial"><span id="avatarInitialText">?</span></div>
+        <div class="profile-menu" id="profileMenu">
+          <div class="profile-menu-header">
+            <div class="profile-menu-name" id="menuName"></div>
+            <div class="profile-menu-org" id="menuOrg"></div>
+          </div>
+          <div class="profile-menu-item" id="darkModeToggle">
+            <span class="label">Dark mode</span>
+            <span class="value" id="darkModeStatus">Off</span>
+          </div>
+          <div class="profile-menu-item" id="changeAvatarButton">
+            <span class="label">Change picture</span>
+          </div>
+          <div class="profile-menu-item" id="signOutButton">
+            <span class="label">Sign out</span>
+          </div>
+        </div>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none" />
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="title" data-i18n="tellUs">Кажете ни повече за вас</div>
+      <div class="sub" data-i18n="fewDetails">Само няколко бързи подробности, за да можем да персонализираме вашето преживяване.</div>
+
+      <form id="profileForm">
+        <div>
+          <label for="name" data-i18n="nameLabel">Име</label>
+          <input type="text" id="name" data-i18n-placeholder="namePlaceholder" placeholder="Вашето име" autocomplete="name">
+        </div>
+        <div>
+          <label for="org" data-i18n="orgLabel">Име на организацията</label>
+          <input type="text" id="org" data-i18n-placeholder="orgPlaceholder" placeholder="Вашата организация" autocomplete="organization">
+        </div>
+        <button type="submit" class="btn" data-i18n="continueBtn">Продължи</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if profile already completed; if yes, skip this screen
+      const savedName = localStorage.getItem('eps_user_name') || '';
+      const savedOrg = localStorage.getItem('eps_user_org') || '';
+      if (!localStorage.getItem('eps_theme')) {
+        localStorage.setItem('eps_theme', 'dark');
+      }
+      if (!localStorage.getItem('eps_language')) {
+        localStorage.setItem('eps_language', 'bg');
+      }
+      const savedTheme = localStorage.getItem('eps_theme') || 'dark';
+
+      // Apply theme
+      document.body.classList.toggle('dark', savedTheme === 'dark');
+      document.body.classList.toggle('light', savedTheme === 'light');
+
+      if (savedName) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      const nameInput = document.getElementById('name');
+      const orgInput = document.getElementById('org');
+      const avatarInitial = document.getElementById('avatarInitial');
+      const avatarInitialText = document.getElementById('avatarInitialText');
+      const profileMenu = document.getElementById('profileMenu');
+      const menuName = document.getElementById('menuName');
+      const menuOrg = document.getElementById('menuOrg');
+      const darkModeToggle = document.getElementById('darkModeToggle');
+      const darkModeStatus = document.getElementById('darkModeStatus');
+      const signOutButton = document.getElementById('signOutButton');
+      const changeAvatarButton = document.getElementById('changeAvatarButton');
+      const avatarFileInput = document.getElementById('avatarFileInput');
+
+      if (savedOrg && menuOrg) {
+        menuOrg.textContent = savedOrg;
+      }
+
+      // Load saved avatar image if present
+      const savedAvatar = localStorage.getItem('eps_user_avatar');
+      if (savedAvatar) {
+        const img = document.createElement('img');
+        img.src = savedAvatar;
+        avatarInitial.innerHTML = '';
+        avatarInitial.appendChild(img);
+      }
+
+      function applyTheme(theme) {
+        const isDark = theme === 'dark';
+        document.body.classList.toggle('dark', isDark);
+        document.body.classList.toggle('light', !isDark);
+        darkModeStatus.textContent = isDark ? 'On' : 'Off';
+      }
+      applyTheme(savedTheme);
+
+      nameInput.addEventListener('input', () => {
+        const n = nameInput.value.trim();
+        if (!localStorage.getItem('eps_user_avatar')) {
+          avatarInitialText.textContent = n ? n[0].toUpperCase() : '?';
+        }
+        if (menuName) menuName.textContent = n;
+      });
+
+      document.getElementById('profileForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = nameInput.value.trim();
+        const org = orgInput.value.trim();
+
+        if (!name) {
+          // localized alert
+          const lang = localStorage.getItem('eps_language') || 'en';
+          const msgs = {
+            en: { enterName: 'Please enter your name.' },
+            bg: { enterName: 'Моля, въведете вашето име.' }
+          };
+          alert(msgs[lang].enterName);
+          return;
+        }
+
+        localStorage.setItem('eps_user_name', name);
+        localStorage.setItem('eps_user_org', org);
+
+        window.location.href = 'index.html';
+      });
+
+      // Avatar menu toggle
+      avatarInitial.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileMenu.classList.toggle('visible');
+      });
+
+      // Close menu when tapping outside
+      document.addEventListener('click', () => {
+        profileMenu.classList.remove('visible');
+      });
+
+      // Dark mode toggle
+      // Change avatar picture
+      changeAvatarButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        avatarFileInput.click();
+      });
+
+      avatarFileInput.addEventListener('change', () => {
+        const file = avatarFileInput.files && avatarFileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result;
+          if (typeof dataUrl === 'string') {
+            localStorage.setItem('eps_user_avatar', dataUrl);
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            avatarInitial.innerHTML = '';
+            avatarInitial.appendChild(img);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+
+      darkModeToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isDark = !document.body.classList.contains('light');
+        const nextTheme = isDark ? 'light' : 'dark';
+        localStorage.setItem('eps_theme', nextTheme);
+        applyTheme(nextTheme);
+      });
+
+      // Translations for this page
+      const translations = {
+        en: {
+          tellUs: 'Tell us about yourself',
+          fewDetails: 'Just a few quick details so we can personalize your experience.',
+          nameLabel: 'Name',
+          namePlaceholder: 'Your name',
+          orgLabel: 'Organization name',
+          orgPlaceholder: 'Your organization',
+          continueBtn: 'Continue',
+          enterNameAlert: 'Please enter your name.'
+        },
+        bg: {
+          tellUs: 'Кажете ни повече за вас',
+          fewDetails: 'Само няколко бързи подробности, за да можем да персонализираме вашето преживяване.',
+          nameLabel: 'Име',
+          namePlaceholder: 'Вашето име',
+          orgLabel: 'Име на организацията',
+          orgPlaceholder: 'Вашата организация',
+          continueBtn: 'Продължи',
+          enterNameAlert: 'Моля, въведете вашето име.'
+        }
+      };
+
+      function getCurrentLanguage() { return localStorage.getItem('eps_language') || 'en'; }
+
+      function translatePage() {
+        const lang = getCurrentLanguage();
+        const t = translations[lang] || translations.en;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+          const key = el.getAttribute('data-i18n');
+          if (t[key]) el.textContent = t[key];
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+          const key = el.getAttribute('data-i18n-placeholder');
+          if (t[key]) el.placeholder = t[key];
+        });
+      }
+
+      // Initial translate and listen for language changes
+      translatePage();
+      window.addEventListener('storage', (e) => { if (e.key === 'eps_language') translatePage(); });
+
+      // Sign out: clear local data and call Appwrite, then go to login
+      signOutButton.addEventListener('click', async (e) => { 
+        e.stopPropagation();
+        profileMenu.classList.remove('visible');
+
+        try {
+          await fetch('https://fra.cloud.appwrite.io/v1/account/sessions/current', {
+            method: 'DELETE',
+            headers: {
+              'X-Appwrite-Project': '6994aeb1000ab573753f'
+            },
+            credentials: 'include'
+          });
+        } catch (err) {
+          // ignore, still clear local state
+        }
+
+        localStorage.removeItem('eps_user_name');
+        localStorage.removeItem('eps_user_org');
+        localStorage.removeItem('eps_theme');
+
+        window.location.href = 'login.html';
+      });
+    });
+  </script>
+</body>
+</html>

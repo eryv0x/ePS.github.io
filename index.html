@@ -1,0 +1,2892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ePS Calendar</title>
+<link rel="stylesheet" href="styles.css">
+<script src="language.js"></script>
+</head>
+
+<body>
+
+<div class="phone">
+    <div class="header">
+        <div class="header-left">
+            <img src="epslogodarkmode.svg" alt="ePS" class="header-logo" id="headerLogo">
+        </div>
+        <div class="header-center">
+            <div class="greeting" id="greetingText">Hello</div>
+        </div>
+        <div>
+            <div class="avatar" id="userAvatar"><span id="userAvatarText">?</span></div>
+            <div class="profile-menu" id="profileMenu">
+                <div class="profile-menu-header">
+                    <div class="profile-menu-name" id="menuName"></div>
+                    <div class="profile-menu-org" id="menuOrg"></div>
+                </div>
+                <div class="profile-menu-item" id="settingsButton">
+                    <span class="label" data-i18n="settings">Settings</span>
+                </div>
+                <div class="profile-menu-item" id="showTutorialButton">
+                    <span class="label" data-i18n="showTutorial">Show tutorial</span>
+                </div>
+                <div class="profile-menu-item" id="changeAvatarButton">
+                    <span class="label" data-i18n="changeProfilePicture">Change picture</span>
+                </div>
+                <div class="profile-menu-item" id="signOutButton">
+                    <span class="label" data-i18n="signOut">Sign out</span>
+                </div>
+            </div>
+            <input type="file" id="avatarFileInput" accept="image/*" style="display:none" />
+            <input type="file" id="productImageInput" accept="image/*" style="display:none" />
+        </div>
+    </div>
+
+    <div class="stats">
+        <button type="button" class="card card-btn" id="storesSetupBtn">
+            <h2 id="storesCount">0</h2>
+            <p data-i18n="stores">Stores</p>
+        </button>
+        <button type="button" class="card card-btn" id="productsSetupBtn">
+            <h2 id="productsCount">0</h2>
+            <p data-i18n="products">Products</p>
+        </button>
+        <button type="button" class="card card-btn secondary" id="manageProductsBtn">
+            <p data-i18n="manageProducts">Manage products</p>
+        </button>
+    </div>
+
+    <div class="calendar-section">
+        <div class="calendar-header">
+            <button type="button" class="calendar-nav-btn" id="prevMonthBtn">←</button>
+            <div class="calendar-month" id="calendarMonth">January 2026</div>
+            <button type="button" class="calendar-nav-btn" id="nextMonthBtn">→</button>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <div class="delivery-section">
+        <div class="delivery-actions-row">
+            <button type="button" class="make-delivery-btn" id="makeDeliveryBtn" data-i18n="makeDelivery">Make a delivery</button>
+            <button type="button" class="gps-toggle-btn" id="toggleGpsBtn" data-i18n-title="startGPS"><img src="i.svg" alt="Pin" style="width:20px;height:20px;"></button>
+        </div>
+    </div>
+
+    <!-- GPS Tracking Section -->
+    <div class="gps-section" id="gpsSection" style="display: none;">
+        <div class="gps-header">
+            <h2 class="gps-title" data-i18n="gpsTracking"><img src="i.svg" alt="Pin" style="width:20px;height:20px;display:inline;margin-right:8px;"> GPS Tracking</h2>
+            <button type="button" class="gps-close-btn" id="closeGpsBtn"><img src="x.svg" alt="Close" style="width:20px;height:20px;"></button>
+        </div>
+        
+        <div class="gps-map-container">
+            <div id="gpsMap" class="gps-map"></div>
+        </div>
+
+        <div class="gps-info">
+            <div class="gps-status" id="gpsStatus" style="text-align: center; padding: 12px; color: #666; font-size: 13px;" data-i18n="loadingGPS">
+                Loading GPS...
+            </div>
+        </div>
+
+        <div class="gps-stores-list">
+            <div class="gps-list-header">
+                <h3 data-i18n="nearbyStores">Nearby Stores</h3>
+                <small style="color: #666; font-size: 12px;" data-i18n="sortedByDistance">Sorted by distance</small>
+            </div>
+            <div id="storeDistanceList" class="store-distance-list"></div>
+        </div>
+    </div>
+</div>
+
+        <!-- Manage products popup -->
+        <div class="popup-overlay" id="manageProductsPopup">
+            <div class="popup-sheet">
+                <div class="popup-header">
+                    <span class="popup-title" data-i18n="manageProducts">Manage products</span>
+                    <button type="button" class="popup-close" id="closeManageProductsPopup" aria-label="Close">&times;</button>
+                </div>
+                <div class="popup-body">
+                    <div id="manageProductsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+                </div>
+            </div>
+        </div>
+
+<!-- App Intro Tutorial -->
+<div class="intro-overlay" id="introOverlay">
+    <div class="intro-modal">
+        <div class="intro-header">
+            <div class="intro-step-counter">
+                <span class="intro-current-step">1</span>/<span class="intro-total-steps">5</span>
+            </div>
+            <button type="button" class="intro-close-btn" id="skipIntroBtn">×</button>
+        </div>
+        
+        <div class="intro-content" id="introContent">
+            <!-- Intro steps will be populated by JS -->
+        </div>
+        
+        <div class="intro-footer">
+            <button type="button" class="intro-btn-skip" id="introSkipBtn" data-i18n="skip">Skip</button>
+            <div class="intro-dots" id="introDots"></div>
+            <button type="button" class="intro-btn-next" id="introNextBtn" data-i18n="next">Next</button>
+        </div>
+    </div>
+</div>
+
+<!-- Day Report Popup -->
+<div class="popup-overlay" id="reportPopup">
+    <div class="popup-sheet">
+        <div class="popup-header">
+            <span class="popup-title" id="reportDate">January 1, 2026</span>
+            <button type="button" class="popup-close" id="closeReportPopup" aria-label="Close">&times;</button>
+        </div>
+        <div class="popup-body">
+            <div class="report-list" id="reportList"></div>
+            <div class="report-empty" id="reportEmpty" style="display: none;">
+                <p data-i18n="noDeliveries">No deliveries on this day</p>
+            </div>
+        </div>
+        <div class="popup-actions">
+            <button type="button" class="action-btn secondary" id="shareTextBtn" data-i18n="shareText">Share Text</button>
+            <button type="button" class="action-btn primary" id="downloadExcelBtn" data-i18n="downloadExcel">Download Excel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Store selection popup -->
+<div class="popup-overlay slide-to-center" id="storePopup">
+    <div class="popup-sheet">
+        <div class="popup-header">
+            <span class="popup-title" data-i18n="chooseStore">Choose a store</span>
+            <button type="button" class="popup-close" id="closeStorePopup" aria-label="Close">&times;</button>
+        </div>
+        <div class="popup-body">
+            <div class="store-list" id="storeList"></div>
+            <div class="store-empty-state" id="storeEmptyState" style="display: none;">
+                <p data-i18n="noStoresMessage">You haven't set up any stores yet. Set up the stores you distribute to to get started.</p>
+                <button type="button" class="form-submit-btn" id="openStoreSetupFromEmpty" data-i18n="setUpStores">Set up your stores</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Store setup popup -->
+<div class="popup-overlay" id="storeSetupPopup">
+    <div class="popup-sheet">
+        <div class="popup-header">
+            <span class="popup-title" data-i18n="setUpStore">Set up a store</span>
+            <button type="button" class="popup-close" id="closeStoreSetupPopup" aria-label="Close">&times;</button>
+        </div>
+        <div class="popup-body">
+            <div class="form-field">
+                <label class="form-label" for="storeNameInput" data-i18n="storeName">Store name</label>
+                <input type="text" id="storeNameInput" class="form-input" data-i18n-placeholder="enterStoreName" placeholder="Enter store name">
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="storeOwnerInput" data-i18n="ownerNames">Owner/s names</label>
+                <input type="text" id="storeOwnerInput" class="form-input" data-i18n-placeholder="enterOwnerNames" placeholder="Enter owner name(s)">
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="storeLocationInput" data-i18n="storeLocation">Store location</label>
+                <div class="location-input-wrapper">
+                    <input type="text" id="storeLocationInput" class="form-input" data-i18n-placeholder="enterStoreLocation" placeholder="Enter address or search on Google Maps">
+                    <button type="button" class="location-search-btn" id="openGoogleMapsBtn"><img src="i.svg" alt="Pin" style="width:16px;height:16px;display:inline;margin-right:6px;"> Search</button>
+                </div>
+            </div>
+        </div>
+        <div class="popup-actions">
+            <button type="button" class="form-submit-btn" id="saveStoreBtn" data-i18n="save">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit store popup -->
+<div class="popup-overlay" id="editStorePopup">
+    <div class="popup-sheet">
+        <div class="popup-header">
+            <span class="popup-title" data-i18n="editStore">Edit store</span>
+            <button type="button" class="popup-close" id="closeEditStorePopup" aria-label="Close">&times;</button>
+        </div>
+        <div class="popup-body">
+            <div class="form-field">
+                <label class="form-label" for="editStoreNameInput" data-i18n="storeName">Store name</label>
+                <input type="text" id="editStoreNameInput" class="form-input" data-i18n-placeholder="enterStoreName" placeholder="Enter store name">
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="editStoreOwnerInput" data-i18n="ownerNames">Owner/s names</label>
+                <input type="text" id="editStoreOwnerInput" class="form-input" data-i18n-placeholder="enterOwnerNames" placeholder="Enter owner name(s)">
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="editStoreLocationInput" data-i18n="storeLocation">Store location</label>
+                <div class="location-input-wrapper">
+                    <input type="text" id="editStoreLocationInput" class="form-input" data-i18n-placeholder="enterStoreLocation" placeholder="Enter address or search on Google Maps">
+                    <button type="button" class="location-search-btn" id="openEditGoogleMapsBtn"><img src="i.svg" alt="Pin" style="width:16px;height:16px;display:inline;margin-right:6px;"> Search</button>
+                </div>
+            </div>
+        </div>
+        <div class="popup-actions" style="display: flex; gap: 12px;">
+            <button type="button" class="action-btn secondary" id="deleteStoreBtn" data-i18n="deleteStore" style="flex: 1;">Delete</button>
+            <button type="button" class="form-submit-btn" id="saveEditStoreBtn" data-i18n="save" style="flex: 2;">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit product popup -->
+<div class="popup-overlay" id="editProductPopup">
+    <div class="popup-sheet">
+        <div class="popup-header">
+            <span class="popup-title" data-i18n="editProduct">Edit product</span>
+            <button type="button" class="popup-close" id="closeEditProductPopup" aria-label="Close">&times;</button>
+        </div>
+        <div class="popup-body">
+            <div class="form-field">
+                <label class="form-label" for="editProductNameInput" data-i18n="productName">Product name</label>
+                <input type="text" id="editProductNameInput" class="form-input" data-i18n-placeholder="enterProductName" placeholder="Enter product name">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Product picture</label>
+                <div class="product-image-upload">
+                    <img id="editProductImagePreview" class="product-image-preview" src="" alt="" style="display: none;">
+                    <button type="button" class="product-image-upload-btn" id="editProductImageUploadBtn">Choose image</button>
+                </div>
+            </div>
+        </div>
+        <div class="popup-actions" style="display: flex; gap: 12px;">
+            <button type="button" class="action-btn secondary" id="deleteProductBtn" data-i18n="deleteProduct" style="flex: 1;">Delete</button>
+            <button type="button" class="form-submit-btn" id="saveEditProductBtn" data-i18n="save" style="flex: 2;">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Product setup popup -->
+<div class="popup-overlay" id="productSetupPopup">
+    <div class="popup-sheet">
+        <div class="popup-header">
+            <span class="popup-title" data-i18n="addProduct">Add a product</span>
+            <button type="button" class="popup-close" id="closeProductSetupPopup" aria-label="Close">&times;</button>
+        </div>
+        <div class="popup-body">
+            <div class="form-field">
+                <label class="form-label" for="productNameInput" data-i18n="productName">Product name</label>
+                <input type="text" id="productNameInput" class="form-input" data-i18n-placeholder="enterProductName" placeholder="Enter product name">
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="productPriceInput" data-i18n="price">Price</label>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" step="0.01" min="0" id="productPriceInput" class="form-input" placeholder="0.00">
+                    <span id="productPriceCurrency" style="font-weight:600;color:inherit">EUR</span>
+                </div>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Product picture</label>
+                <div class="product-image-upload">
+                    <img id="productImagePreview" class="product-image-preview" src="" alt="" style="display: none;">
+                    <button type="button" class="product-image-upload-btn" id="productImageUploadBtn">Choose image</button>
+                </div>
+            </div>
+        </div>
+
+                
+        <div class="popup-actions">
+            <button type="button" class="form-submit-btn" id="saveProductBtn" data-i18n="save">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit delivery popup -->
+<div class="popup-overlay slide-to-center" id="editDeliveryPopup">
+    <div class="popup-sheet">
+        <div class="popup-header">
+            <span class="popup-title" data-i18n="editDelivery">Edit Delivery</span>
+            <button type="button" class="popup-close" id="closeEditDeliveryPopup" aria-label="Close">&times;</button>
+        </div>
+        <div class="popup-body">
+            <div class="selector-block">
+                <label class="selector-label" data-i18n="store">Store</label>
+                <div class="selector-dropdown" id="editStoreSelectorDropdown">
+                    <button type="button" class="selector-trigger" id="editStoreSelectorTrigger">
+                        <span class="selector-trigger-text" id="editSelectedStoreName">—</span>
+                        <span class="selector-chevron">▼</span>
+                    </button>
+                    <div class="selector-list" id="editStoreSelectorList"></div>
+                </div>
+            </div>
+            <div class="selector-block">
+                <label class="selector-label" data-i18n="product">Product</label>
+                <div class="selector-dropdown" id="editProductSelectorDropdown">
+                    <button type="button" class="selector-trigger" id="editProductSelectorTrigger">
+                        <span class="product-selector-preview" id="editSelectedProductPreview"></span>
+                        <span class="selector-trigger-text" id="editSelectedProductName">—</span>
+                        <span class="selector-chevron">▼</span>
+                    </button>
+                    <div class="selector-list" id="editProductSelectorList"></div>
+                <div style="margin-top:8px;">
+                    <label class="form-label" for="editProductPriceInput" data-i18n="price">Price</label>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <input type="number" step="0.01" min="0" id="editProductPriceInput" class="form-input" placeholder="0.00">
+                        <span id="editProductPriceCurrency" style="font-weight:600;color:inherit">EUR</span>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="quantity-block">
+                <label class="selector-label" data-i18n="quantity">Quantity</label>
+                <div class="quantity-row">
+                    <button type="button" class="qty-btn qty-btn-left" id="editQtyMinus5">−5</button>
+                    <button type="button" class="qty-btn qty-btn-left" id="editQtyMinus1">−1</button>
+                    <input type="number" class="qty-input" id="editQtyInput" value="0" min="0" inputmode="numeric" placeholder="0">
+                    <button type="button" class="qty-btn qty-btn-right" id="editQtyPlus1">+1</button>
+                    <button type="button" class="qty-btn qty-btn-right" id="editQtyPlus5">+5</button>
+                </div>
+            </div>
+        </div>
+        <div class="popup-actions">
+            <button type="button" class="action-btn secondary" id="deleteDeliveryBtn" data-i18n="deleteDelivery">Delete</button>
+            <button type="button" class="action-btn primary" id="saveEditDeliveryBtn" data-i18n="saveChanges">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Product selection popup -->
+<div class="popup-overlay slide-to-center" id="productPopup">
+    <div class="popup-sheet">
+        <div class="popup-header">
+            <span class="popup-title" data-i18n="chooseProduct">Choose a product</span>
+            <button type="button" class="popup-close" id="closeProductPopup" aria-label="Close">&times;</button>
+        </div>
+        <div class="popup-body">
+            <div class="store-empty-state" id="productEmptyState" style="display: none;">
+                <p data-i18n="noProductsMessage">You haven't set up any products yet. Add the products you distribute to get started.</p>
+                <button type="button" class="form-submit-btn" id="openProductSetupFromEmpty" data-i18n="addProduct">Add a product</button>
+            </div>
+            <div id="productPopupContent" style="display: none;">
+                <div class="selector-block">
+                    <label class="selector-label">Store</label>
+                    <div class="selector-dropdown" id="storeSelectorDropdown">
+                        <button type="button" class="selector-trigger" id="storeSelectorTrigger">
+                            <span class="selector-trigger-text" id="selectedStoreName">—</span>
+                            <span class="selector-chevron">▼</span>
+                        </button>
+                        <div class="selector-list" id="storeSelectorList"></div>
+                    </div>
+                </div>
+                <div class="selector-block">
+                    <label class="selector-label">Product</label>
+                    <div class="selector-dropdown" id="productSelectorDropdown">
+                        <button type="button" class="selector-trigger" id="productSelectorTrigger">
+                            <span class="product-selector-preview" id="selectedProductPreview"></span>
+                            <span class="selector-trigger-text" id="selectedProductName">—</span>
+                            <span class="selector-chevron">▼</span>
+                        </button>
+                        <div class="selector-list" id="productSelectorList"></div>
+                    </div>
+                </div>
+                <div class="quantity-block">
+                    <label class="selector-label" data-i18n="quantity">Quantity</label>
+                    <div class="quantity-row">
+                        <button type="button" class="qty-btn qty-btn-left" id="qtyMinus5">−5</button>
+                        <button type="button" class="qty-btn qty-btn-left" id="qtyMinus1">−1</button>
+                        <input type="number" class="qty-input" id="qtyInput" value="0" min="0" inputmode="numeric" placeholder="0">
+                        <button type="button" class="qty-btn qty-btn-right" id="qtyPlus1">+1</button>
+                        <button type="button" class="qty-btn qty-btn-right" id="qtyPlus5">+5</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="popup-actions">
+            <button type="button" class="make-delivery-btn" id="confirmDeliveryBtn" data-i18n="makeDelivery">Make a delivery</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Calendar management
+let currentMonth = new Date();
+const deliveries = {};
+
+function initializeDarkMode() {
+    if (!localStorage.getItem('eps_theme')) {
+        localStorage.setItem('eps_theme', 'dark');
+    }
+    const theme = localStorage.getItem('eps_theme') || 'dark';
+    document.body.classList.toggle('dark', theme === 'dark');
+    document.body.classList.toggle('light', theme === 'light');
+    updateLogo();
+}
+
+function updateLogo() {
+    const headerLogo = document.getElementById('headerLogo');
+    if (!headerLogo) return;
+    if (document.body.classList.contains('dark')) {
+        headerLogo.src = 'epslogodarkmode.svg';
+    } else {
+        headerLogo.src = 'epslogo.svg';
+    }
+}
+
+function getIntroShownKey() {
+    const userId = localStorage.getItem('eps_user_id') || 'anonymous';
+    return 'eps_intro_shown_' + userId;
+}
+
+function getDeliveriesKey() {
+    const userId = localStorage.getItem('eps_user_id') || 'anonymous';
+    return 'eps_deliveries_' + userId;
+}
+
+function saveDeliveries() {
+    localStorage.setItem(getDeliveriesKey(), JSON.stringify(deliveries));
+}
+
+function loadDeliveries() {
+    const data = localStorage.getItem(getDeliveriesKey());
+    if (data) {
+        Object.assign(deliveries, JSON.parse(data));
+    }
+}
+
+function updateStats() {
+    const stores = getUserStores();
+    const products = getUserProducts();
+    
+    const storesCount = document.getElementById('storesCount');
+    const productsCount = document.getElementById('productsCount');
+    
+    if (storesCount) storesCount.textContent = stores.length;
+    if (productsCount) productsCount.textContent = products.length;
+}
+
+function getUserStores() {
+    const userId = localStorage.getItem('eps_user_id') || 'anonymous';
+    const data = localStorage.getItem('eps_stores_' + userId);
+    return data ? JSON.parse(data) : [];
+}
+
+function saveUserStores(stores) {
+    const userId = localStorage.getItem('eps_user_id') || 'anonymous';
+    localStorage.setItem('eps_stores_' + userId, JSON.stringify(stores));
+}
+
+function getUserProducts() {
+    const userId = localStorage.getItem('eps_user_id') || 'anonymous';
+    const data = localStorage.getItem('eps_products_' + userId);
+    return data ? JSON.parse(data) : [];
+}
+
+function saveUserProducts(products) {
+    const userId = localStorage.getItem('eps_user_id') || 'anonymous';
+    localStorage.setItem('eps_products_' + userId, JSON.stringify(products));
+}
+
+function getDateKey(date) {
+    return date.toISOString().split('T')[0];
+}
+
+function renderCalendar() {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    
+    const lang = localStorage.getItem('eps_language') || 'en';
+    const monthNames = lang === 'bg' ? [
+        'Януари', 'Февруари', 'Март', 'Април', 'Май', 'Юни',
+        'Юли', 'Август', 'Септември', 'Октомври', 'Ноември', 'Декември'
+    ] : [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    document.getElementById('calendarMonth').textContent = monthNames[month] + ' ' + year;
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    // Calendar customization from settings
+    const calendarStart = localStorage.getItem('eps_calendar_start') || 'mon'; // 'sun'|'mon'|'sat'
+    const startOffset = (calendarStart === 'mon') ? 1 : (calendarStart === 'sat' ? 6 : 0);
+    const nonWorkDays = JSON.parse(localStorage.getItem('eps_calendar_nonwork') || '[]');
+    const nonWorkColor = localStorage.getItem('eps_calendar_nonwork_color') || '#ff4d4f';
+
+    const calendarGrid = document.getElementById('calendarGrid');
+    calendarGrid.innerHTML = '';
+
+    const baseWeek = lang === 'bg' ? ['Нед', 'Пон', 'Вто', 'Сря', 'Чет', 'Пет', 'Съб'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    // rotate week days according to startOffset
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+        weekDays.push(baseWeek[(startOffset + i) % 7]);
+    }
+    weekDays.forEach((day, idx) => {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-weekday';
+        dayEl.textContent = day;
+        // mark header for non-working weekday
+        const realWeekday = (startOffset + idx) % 7; // 0=Sun..6=Sat
+        if (nonWorkDays.indexOf(realWeekday) !== -1) {
+            dayEl.style.color = nonWorkColor;
+            dayEl.classList.add('non-working-weekday');
+        }
+        calendarGrid.appendChild(dayEl);
+    });
+
+    // Previous month's days (leading cells) adjusted by startOffset
+    const leadingDays = (startingDayOfWeek - startOffset + 7) % 7;
+    for (let i = leadingDays - 1; i >= 0; i--) {
+        const prevDate = new Date(year, month, -i);
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-day other-month';
+        dayEl.textContent = prevDate.getDate();
+        // mark non-working if this weekday is in the list
+        const weekdayIndex = (startOffset + (leadingDays - 1 - i)) % 7;
+        if (nonWorkDays.indexOf(weekdayIndex) !== -1) {
+            dayEl.style.color = nonWorkColor;
+            dayEl.classList.add('non-working');
+        }
+        calendarGrid.appendChild(dayEl);
+    }
+
+    // Current month's days
+    const today = new Date();
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-day';
+        dayEl.textContent = day;
+
+        const isToday = date.toDateString() === today.toDateString();
+        if (isToday) {
+            dayEl.classList.add('today');
+        }
+
+        const dateKey = getDateKey(date);
+        if (deliveries[dateKey] && deliveries[dateKey].length > 0) {
+            dayEl.classList.add('has-deliveries');
+        }
+
+        // Determine weekday index for this day cell, relative to calendar start
+        const weekdayIndex = (leadingDays + (day - 1)) % 7; // 0..6 relative to startOffset
+        const realWeekday = (startOffset + weekdayIndex) % 7; // map to real 0=Sun..6=Sat
+        if (nonWorkDays.indexOf(realWeekday) !== -1) {
+            dayEl.classList.add('non-working');
+            dayEl.style.color = nonWorkColor;
+        }
+
+        dayEl.addEventListener('click', () => {
+            openDayReport(date);
+        });
+
+        calendarGrid.appendChild(dayEl);
+    }
+
+    // Do not render trailing next-month days; calendar ends when the month ends.
+}
+
+function openDayReport(date) {
+    const dateKey = getDateKey(date);
+    const dateStr = date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('reportDate').textContent = dateStr;
+
+    const reportList = document.getElementById('reportList');
+    const reportEmpty = document.getElementById('reportEmpty');
+    const dayDeliveries = deliveries[dateKey] || [];
+
+    if (dayDeliveries.length === 0) {
+        reportList.style.display = 'none';
+        reportEmpty.style.display = 'block';
+    } else {
+        reportEmpty.style.display = 'none';
+        reportList.style.display = 'flex';
+        
+        // Combine duplicate store+product deliveries
+        const combinedDeliveries = {};
+        const deliveryOrder = [];
+        dayDeliveries.forEach((delivery, originalIndex) => {
+            const key = delivery.storeName + '|' + delivery.productName;
+            if (!combinedDeliveries[key]) {
+                combinedDeliveries[key] = { ...delivery, quantity: 0, originalIndices: [] };
+                deliveryOrder.push(key);
+            }
+            combinedDeliveries[key].quantity += delivery.quantity;
+            combinedDeliveries[key].originalIndices.push(originalIndex);
+        });
+        
+        reportList.innerHTML = deliveryOrder.map(key => {
+            const delivery = combinedDeliveries[key];
+            return `
+                <div class="report-item clickable-delivery" data-delivery-key="${key.replace(/"/g, '&quot;')}" data-date-key="${dateKey}">
+                    <div style="flex: 1;">
+                        <div class="report-store-name">${delivery.storeName}</div>
+                        <div class="report-detail"><strong>${delivery.productName}</strong>: ${delivery.quantity}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Add click event listeners to edit deliveries
+        reportList.querySelectorAll('.clickable-delivery').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const key = item.dataset.deliveryKey;
+                const dateKey = item.dataset.dateKey;
+                const [storeName, productName] = key.split('|');
+                // Find first original index for this combination
+                const firstIndex = deliveries[dateKey].findIndex(d => d.storeName === storeName && d.productName === productName);
+                if (firstIndex !== -1) {
+                    openEditDeliveryPopup(dateKey, firstIndex);
+                }
+            });
+        });
+    }
+
+    document.getElementById('reportPopup').classList.add('visible');
+    window.reportDate = date;
+}
+
+function closeReportPopup() {
+    document.getElementById('reportPopup').classList.remove('visible');
+}
+
+let editingDelivery = { dateKey: null, index: null, matchingIndices: [] };
+let editSelectedStore = null;
+let editSelectedProduct = null;
+
+function closeEditDeliveryPopup() {
+    document.getElementById('editDeliveryPopup').classList.remove('visible');
+}
+
+function openEditDeliveryPopup(dateKey, index) {
+    const delivery = deliveries[dateKey][index];
+    if (!delivery) return;
+    
+    // Find all deliveries matching this store+product combination
+    const matchingIndices = [];
+    let totalQuantity = 0;
+    deliveries[dateKey].forEach((d, i) => {
+        if (d.storeName === delivery.storeName && d.productName === delivery.productName) {
+            matchingIndices.push(i);
+            totalQuantity += d.quantity;
+        }
+    });
+    
+    editingDelivery = { dateKey, index, matchingIndices };
+    editSelectedStore = null;
+    editSelectedProduct = null;
+    
+    // Load and render stores
+    const stores = getUserStores();
+    const editStoreSelectorList = document.getElementById('editStoreSelectorList');
+    editStoreSelectorList.innerHTML = stores.map(s => {
+        return '<div class="selector-item" data-store-id="' + (s.id || '').replace(/"/g, '&quot;') + '" data-store-name="' + (s.name || '').replace(/"/g, '&quot;') + '">' + (s.name || 'Store') + '</div>';
+    }).join('');
+    editStoreSelectorList.querySelectorAll('.selector-item').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const store = stores.find(s => (s.id || '') === (el.dataset.storeId || ''));
+            if (store) {
+                editSelectedStore = { id: store.id, name: store.name };
+                document.getElementById('editSelectedStoreName').textContent = store.name;
+                document.getElementById('editStoreSelectorDropdown').classList.remove('expanded');
+            }
+        });
+    });
+    
+    // Load and render products
+    const products = getUserProducts();
+    const editProductSelectorList = document.getElementById('editProductSelectorList');
+    editProductSelectorList.innerHTML = products.map(p => {
+        const imgHtml = p.image ? '<img src="' + p.image + '" alt="" style="width:36px;height:36px;border-radius:8px;object-fit:cover">' : '<span style="width:36px;height:36px;border-radius:8px;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:16px">📦</span>';
+        return '<div class="selector-item" data-product-id="' + (p.id || '').replace(/"/g, '&quot;') + '">' + imgHtml + '<span>' + (p.name || 'Product').replace(/</g, '&lt;') + '</span></div>';
+    }).join('');
+    editProductSelectorList.querySelectorAll('.selector-item').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const p = products.find(pr => (pr.id || '') === el.dataset.productId);
+            if (p) {
+                editSelectedProduct = p;
+                document.getElementById('editSelectedProductName').textContent = p.name || 'Product';
+                document.getElementById('editSelectedProductPreview').innerHTML = p.image ? '<img src="' + p.image + '" alt="">' : '📦';
+                document.getElementById('editProductSelectorDropdown').classList.remove('expanded');
+            }
+        });
+    });
+    
+    // Set current values - show combined quantity
+    editSelectedStore = { name: delivery.storeName };
+    editSelectedProduct = { name: delivery.productName };
+    document.getElementById('editSelectedStoreName').textContent = delivery.storeName;
+    document.getElementById('editSelectedProductName').textContent = delivery.productName;
+    document.getElementById('editQtyInput').value = totalQuantity;
+    
+    document.getElementById('editDeliveryPopup').classList.add('visible');
+}
+
+function deleteCurrentDelivery() {
+    if (editingDelivery.dateKey === null || editingDelivery.matchingIndices.length === 0) return;
+    
+    const { dateKey, matchingIndices } = editingDelivery;
+    // Delete in reverse order to maintain correct indices
+    for (let i = matchingIndices.length - 1; i >= 0; i--) {
+        deliveries[dateKey].splice(matchingIndices[i], 1);
+    }
+    
+    if (deliveries[dateKey].length === 0) {
+        delete deliveries[dateKey];
+    }
+    
+    saveDeliveries();
+    renderCalendar();
+    updateStats();
+    closeEditDeliveryPopup();
+    
+    if (window.reportDate) {
+        openDayReport(window.reportDate);
+    }
+}
+
+function saveEditDelivery() {
+    if (!editSelectedStore || !editSelectedProduct || editingDelivery.dateKey === null) return;
+    
+    const { dateKey, matchingIndices } = editingDelivery;
+    const qty = parseInt(document.getElementById('editQtyInput').value, 10) || 0;
+    
+    // Replace first matching index with updated delivery
+    deliveries[dateKey][matchingIndices[0]] = {
+        storeName: editSelectedStore.name,
+        productName: editSelectedProduct.name,
+        quantity: qty
+    };
+    
+    // Delete remaining matching indices in reverse order
+    for (let i = matchingIndices.length - 1; i >= 1; i--) {
+        deliveries[dateKey].splice(matchingIndices[i], 1);
+    }
+    
+    saveDeliveries();
+    renderCalendar();
+    updateStats();
+    closeEditDeliveryPopup();
+    
+    if (window.reportDate) {
+        openDayReport(window.reportDate);
+    }
+}
+
+function generateTextReport() {
+    if (!window.reportDate) return;
+    const dateKey = getDateKey(window.reportDate);
+    const dayDeliveries = deliveries[dateKey] || [];
+    
+    // Combine duplicate store+product deliveries
+    const combinedDeliveries = {};
+    const deliveryOrder = [];
+    dayDeliveries.forEach((delivery) => {
+        const key = delivery.storeName + '|' + delivery.productName;
+        if (!combinedDeliveries[key]) {
+            combinedDeliveries[key] = { ...delivery, quantity: 0 };
+            deliveryOrder.push(key);
+        }
+        combinedDeliveries[key].quantity += delivery.quantity;
+    });
+    
+    let text = 'Daily Report - ' + window.reportDate.toLocaleDateString() + '\n\n';
+    deliveryOrder.forEach(key => {
+        const delivery = combinedDeliveries[key];
+        text += `${delivery.storeName}: ${delivery.productName} - ${delivery.quantity}\n`;
+    });
+    
+    navigator.clipboard.writeText(text).then(() => {
+        // Show success notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 16px;
+            z-index: 1001;
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+            text-align: center;
+        `;
+        const lang = getCurrentLanguage();
+        const t = translations[lang] || translations.en;
+        notification.textContent = t.reportCopied;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 2000);
+    });
+}
+
+function generateExcelReport() {
+    try {
+        // Determine report date (fallback to popup title if window.reportDate missing)
+        let reportDate = window.reportDate;
+        if (!reportDate) {
+            const rdEl = document.getElementById('reportDate');
+            if (rdEl) {
+                const parsed = new Date(rdEl.textContent);
+                if (!isNaN(parsed)) reportDate = parsed;
+            }
+        }
+        if (!reportDate) {
+            const lang = getCurrentLanguage();
+            const t = translations[lang] || translations.en;
+            const n = document.createElement('div');
+            n.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;color:#fff;padding:14px 18px;border-radius:10px;z-index:1001`; 
+            n.textContent = t.noDeliveries || 'No deliveries on this day';
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 1800);
+            return;
+        }
+
+        const dateKey = getDateKey(reportDate instanceof Date ? reportDate : new Date(reportDate));
+        const dayDeliveries = deliveries[dateKey] || [];
+
+        // Combine duplicate store+product deliveries
+        const combinedDeliveries = {};
+        const deliveryOrder = [];
+        dayDeliveries.forEach((delivery) => {
+            const key = delivery.storeName + '|' + delivery.productName;
+            if (!combinedDeliveries[key]) {
+                combinedDeliveries[key] = { ...delivery, quantity: 0 };
+                deliveryOrder.push(key);
+            }
+            combinedDeliveries[key].quantity += delivery.quantity;
+        });
+
+        const lang = getCurrentLanguage();
+        const t = translations[lang] || translations.en;
+        const sep = (lang === 'bg') ? ';' : ',';
+        const eol = '\r\n';
+        let rows = [];
+        rows.push(`${t.store || 'Store'}${sep}${t.product || 'Product'}${sep}${t.quantity || 'Quantity'}${sep}${t.price || 'Price'} (${getCurrency()})${sep}${t.total || 'Total'} (${getCurrency()})`);
+        let grandTotal = 0;
+        deliveryOrder.forEach(key => {
+            const delivery = combinedDeliveries[key];
+            const priceUSD = delivery.priceUSD ? Number(delivery.priceUSD) : 0;
+            const displayCurrency = getCurrency();
+            const price = convertAmount(priceUSD, 'USD', displayCurrency);
+            const total = price * (delivery.quantity || 0);
+            grandTotal += convertAmount(priceUSD * (delivery.quantity || 0), 'USD', 'USD');
+            const locale = getLocaleForCurrency(displayCurrency);
+            const priceStr = Number(price).toLocaleString(locale, {minimumFractionDigits:2, maximumFractionDigits:2});
+            const totalStr = Number(total).toLocaleString(locale, {minimumFractionDigits:2, maximumFractionDigits:2});
+            const storeEsc = String(delivery.storeName || '').replace(/"/g, '""');
+            const productEsc = String(delivery.productName || '').replace(/"/g, '""');
+            rows.push(`"${storeEsc}"${sep}"${productEsc}"${sep}${delivery.quantity}${sep}${priceStr} ${displayCurrency}${sep}${totalStr} ${displayCurrency}`);
+        });
+
+        const displayCurrency = getCurrency();
+        const grandTotalDisplay = convertAmount(grandTotal, 'USD', displayCurrency);
+        const grandLocale = getLocaleForCurrency(displayCurrency);
+        const grandTotalStr = Number(grandTotalDisplay).toLocaleString(grandLocale, {minimumFractionDigits:2, maximumFractionDigits:2});
+        rows.push(['', '', '', '', `${t.sum || 'Sum'}: ${grandTotalStr} ${displayCurrency}`].join(sep));
+
+        const csvContent = '\uFEFF' + rows.join(eol);
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `report-${dateKey}.csv`;
+        // Append anchor to DOM to ensure click() works in all browsers
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        // Show success notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 16px;
+            z-index: 1001;
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+            text-align: center;
+        `;
+        const lang2 = getCurrentLanguage();
+        const t2 = translations[lang2] || translations.en;
+        notification.textContent = t2.reportDownloaded;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 2000);
+    } catch (err) {
+        console.error('generateExcelReport error', err);
+        const lang = getCurrentLanguage();
+        const t = translations[lang] || translations.en;
+        const n = document.createElement('div');
+        n.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#a00;color:#fff;padding:14px 18px;border-radius:10px;z-index:1001`;
+        n.textContent = (t.reportDownloadError) || 'Failed to generate report';
+        document.body.appendChild(n);
+        setTimeout(() => n.remove(), 2500);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if user is logged in
+    const userId = localStorage.getItem('eps_user_id');
+    const userName = localStorage.getItem('eps_user_name');
+    
+    if (!userId || !userName) {
+        // Redirect to login if not logged in
+        // Temporarily disabled to allow testing without Google login
+        // window.location.href = 'login.html';
+        // return;
+    }
+    
+    // Initialize language and theme
+    if (!localStorage.getItem('eps_language')) {
+        localStorage.setItem('eps_language', 'bg');
+    }
+    
+    initializeDarkMode();
+    loadDeliveries();
+    updateStats();
+    renderCalendar();
+    updateCurrencyLabels();
+
+    // Personalization
+    const name = localStorage.getItem('eps_user_name') || '';
+    const org = localStorage.getItem('eps_user_org') || '';
+
+    const greetingEl = document.getElementById('greetingText');
+    const avatarEl = document.getElementById('userAvatar');
+    const avatarTextEl = document.getElementById('userAvatarText');
+    const profileMenu = document.getElementById('profileMenu');
+    const menuName = document.getElementById('menuName');
+    const menuOrg = document.getElementById('menuOrg');
+
+    if (name && greetingEl && avatarEl) {
+        greetingEl.textContent = name;
+        if (!localStorage.getItem('eps_user_avatar')) {
+            avatarTextEl.textContent = name.trim()[0]?.toUpperCase() || '?';
+        }
+        if (menuName) menuName.textContent = name;
+    }
+    if (org && menuOrg) {
+        menuOrg.textContent = org;
+    }
+
+    const savedAvatar = localStorage.getItem('eps_user_avatar');
+    if (savedAvatar) {
+        const img = document.createElement('img');
+        img.src = savedAvatar;
+        avatarEl.innerHTML = '';
+        avatarEl.appendChild(img);
+    }
+
+    // Avatar menu
+    avatarEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileMenu.classList.toggle('visible');
+    });
+
+    document.addEventListener('click', () => {
+        profileMenu.classList.remove('visible');
+    });
+
+    const settingsButton = document.getElementById('settingsButton');
+    settingsButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileMenu.classList.remove('visible');
+        window.location.href = 'usersettings.html';
+    });
+
+    const changeAvatarButton = document.getElementById('changeAvatarButton');
+    const avatarFileInput = document.getElementById('avatarFileInput');
+    changeAvatarButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        avatarFileInput.click();
+    });
+
+    avatarFileInput.addEventListener('change', () => {
+        const file = avatarFileInput.files && avatarFileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const dataUrl = reader.result;
+            if (typeof dataUrl === 'string') {
+                localStorage.setItem('eps_user_avatar', dataUrl);
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                avatarEl.innerHTML = '';
+                avatarEl.appendChild(img);
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    const signOutButton = document.getElementById('signOutButton');
+    signOutButton.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        profileMenu.classList.remove('visible');
+        localStorage.removeItem('eps_user_name');
+        localStorage.removeItem('eps_user_org');
+        window.location.href = 'login.html';
+    });
+
+    // Calendar navigation
+    document.getElementById('prevMonthBtn').addEventListener('click', () => {
+        currentMonth.setMonth(currentMonth.getMonth() - 1);
+        renderCalendar();
+    });
+
+    document.getElementById('nextMonthBtn').addEventListener('click', () => {
+        currentMonth.setMonth(currentMonth.getMonth() + 1);
+        renderCalendar();
+    });
+
+    // Report popup
+    document.getElementById('closeReportPopup').addEventListener('click', closeReportPopup);
+    document.getElementById('reportPopup').addEventListener('click', (e) => {
+        if (e.target.id === 'reportPopup') closeReportPopup();
+    });
+    
+    // Edit delivery popup
+    document.getElementById('closeEditDeliveryPopup').addEventListener('click', closeEditDeliveryPopup);
+    document.getElementById('editDeliveryPopup').addEventListener('click', (e) => {
+        if (e.target.id === 'editDeliveryPopup') closeEditDeliveryPopup();
+    });
+    
+    // Edit delivery dropdown toggles
+    document.getElementById('editStoreSelectorTrigger').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('editStoreSelectorDropdown').classList.toggle('expanded');
+        document.getElementById('editProductSelectorDropdown').classList.remove('expanded');
+    });
+    document.getElementById('editProductSelectorTrigger').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('editProductSelectorDropdown').classList.toggle('expanded');
+        document.getElementById('editStoreSelectorDropdown').classList.remove('expanded');
+    });
+    
+    // Edit quantity buttons
+    document.getElementById('editQtyMinus5').addEventListener('click', () => {
+        let val = parseInt(document.getElementById('editQtyInput').value, 10) || 0;
+        document.getElementById('editQtyInput').value = Math.max(0, val - 5);
+    });
+    document.getElementById('editQtyMinus1').addEventListener('click', () => {
+        let val = parseInt(document.getElementById('editQtyInput').value, 10) || 0;
+        document.getElementById('editQtyInput').value = Math.max(0, val - 1);
+    });
+    document.getElementById('editQtyPlus1').addEventListener('click', () => {
+        let val = parseInt(document.getElementById('editQtyInput').value, 10) || 0;
+        document.getElementById('editQtyInput').value = val + 1;
+    });
+    document.getElementById('editQtyPlus5').addEventListener('click', () => {
+        let val = parseInt(document.getElementById('editQtyInput').value, 10) || 0;
+        document.getElementById('editQtyInput').value = val + 5;
+    });
+    document.getElementById('editQtyInput').addEventListener('input', () => {
+        let val = parseInt(document.getElementById('editQtyInput').value, 10);
+        if (isNaN(val) || val < 0) document.getElementById('editQtyInput').value = 0;
+    });
+    
+    document.getElementById('deleteDeliveryBtn').addEventListener('click', deleteCurrentDelivery);
+    document.getElementById('saveEditDeliveryBtn').addEventListener('click', saveEditDelivery);
+
+    document.getElementById('shareTextBtn').addEventListener('click', generateTextReport);
+    document.getElementById('downloadExcelBtn').addEventListener('click', generateExcelReport);
+
+    // Delivery workflow
+    const makeDeliveryBtn = document.getElementById('makeDeliveryBtn');
+    const storePopup = document.getElementById('storePopup');
+    const productPopup = document.getElementById('productPopup');
+    const storeListEl = document.getElementById('storeList');
+    const storeEmptyState = document.getElementById('storeEmptyState');
+    const openStoreSetupFromEmpty = document.getElementById('openStoreSetupFromEmpty');
+    const closeStorePopup = document.getElementById('closeStorePopup');
+    const closeProductPopup = document.getElementById('closeProductPopup');
+    const confirmDeliveryBtn = document.getElementById('confirmDeliveryBtn');
+    const distributedCount1 = document.getElementById('distributedCount1');
+    const distributedCount2 = document.getElementById('distributedCount2');
+
+    let currentUserId = null;
+
+    async function getCurrentUserId() {
+        if (currentUserId) return currentUserId;
+        currentUserId = localStorage.getItem('eps_user_id') || 'user_' + Date.now();
+        localStorage.setItem('eps_user_id', currentUserId);
+        return currentUserId;
+    }
+
+    function getStoresKey() {
+        return 'eps_stores_' + (currentUserId || 'anonymous');
+    }
+
+    function getUserStores() {
+        const key = getStoresKey();
+        try {
+            const raw = localStorage.getItem(key);
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveUserStores(stores) {
+        const key = getStoresKey();
+        localStorage.setItem(key, JSON.stringify(stores));
+    }
+
+    function getProductsKey() {
+        return 'eps_products_' + (currentUserId || 'anonymous');
+    }
+
+    function getUserProducts() {
+        const key = getProductsKey();
+        try {
+            const raw = localStorage.getItem(key);
+            const list = raw ? JSON.parse(raw) : [];
+            // Migration: if products have legacy `price` (entered before currency support),
+            // convert it to `priceUSD` assuming it was entered in the user's current currency.
+            const currency = localStorage.getItem('eps_currency') || 'EUR';
+            if (list && list.length) {
+                let changed = false;
+                list.forEach(p => {
+                    if (p && p.priceUSD == null && p.price != null) {
+                        // mark priceUSD later after rates are loaded; temporarily store original
+                        p._legacyPrice = p.price;
+                        changed = true;
+                    }
+                });
+                if (changed) saveUserProducts(list);
+            }
+            return list;
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveUserProducts(products) {
+        const key = getProductsKey();
+        localStorage.setItem(key, JSON.stringify(products));
+    }
+
+    function parseLatLngFromLocation(str) {
+        if (!str || typeof str !== 'string') return null;
+        let match = str.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+        if (match) {
+            const lat = parseFloat(match[1]);
+            const lng = parseFloat(match[2]);
+            if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                return { lat, lng };
+            }
+        }
+        return null;
+    }
+
+    // Currency / exchange rate helpers
+    const fallbackRates = { USD: 1, EUR: 0.92, BGN: 1.8 };
+    let exchangeRates = null; // rates with base USD (1 USD = X CUR)
+
+    async function loadExchangeRates() {
+        try {
+            const resp = await fetch('https://api.exchangerate.host/latest?base=USD');
+            if (resp.ok) {
+                const data = await resp.json();
+                exchangeRates = Object.assign({ USD: 1 }, data.rates || {});
+                return exchangeRates;
+            }
+        } catch (e) {
+            // ignore
+        }
+        exchangeRates = fallbackRates;
+        return exchangeRates;
+    }
+
+    function getCurrency() {
+        return localStorage.getItem('eps_currency') || 'EUR';
+    }
+
+    function getLocaleForCurrency(currency) {
+        // Use Bulgarian locale for EUR/BGN (Bulgaria uses bg formatting), USD use en-US
+        if (currency === 'EUR' || currency === 'BGN') return 'bg-BG';
+        if (currency === 'USD') return 'en-US';
+        return 'en-US';
+    }
+
+    function convertAmount(amount, from, to) {
+        if (from === to) return Number(amount) || 0;
+        const rates = exchangeRates || fallbackRates;
+        const f = rates[from] || (from === 'USD' ? 1 : null);
+        const t = rates[to] || (to === 'USD' ? 1 : null);
+        if (!f || !t) return Number(amount) || 0;
+        // Convert from 'from' to USD, then to 'to'
+        const amountUSD = (from === 'USD') ? Number(amount) : (Number(amount) / f);
+        const result = (to === 'USD') ? amountUSD : (amountUSD * t);
+        return Number(result) || 0;
+    }
+
+    function getDistanceKm(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+            Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    function formatDistance(km) {
+        if (km == null) return null;
+        if (km < 1) return (km * 1000).toFixed(0) + ' m';
+        return km.toFixed(1) + ' km';
+    }
+
+    function closeStorePopupFn() {
+        storePopup.classList.remove('visible');
+    }
+
+    function closeProductPopupFn() {
+        productPopup.classList.remove('visible');
+    }
+
+    const productPopupContent = document.getElementById('productPopupContent');
+    const productEmptyState = document.getElementById('productEmptyState');
+    const openProductSetupFromEmpty = document.getElementById('openProductSetupFromEmpty');
+    const storeSelectorDropdown = document.getElementById('storeSelectorDropdown');
+    const storeSelectorTrigger = document.getElementById('storeSelectorTrigger');
+    const storeSelectorList = document.getElementById('storeSelectorList');
+    const selectedStoreName = document.getElementById('selectedStoreName');
+    const productSelectorDropdown = document.getElementById('productSelectorDropdown');
+    const productSelectorTrigger = document.getElementById('productSelectorTrigger');
+    const productSelectorList = document.getElementById('productSelectorList');
+    const selectedProductName = document.getElementById('selectedProductName');
+    const selectedProductPreview = document.getElementById('selectedProductPreview');
+    const qtyInput = document.getElementById('qtyInput');
+    const qtyMinus5 = document.getElementById('qtyMinus5');
+    const qtyMinus1 = document.getElementById('qtyMinus1');
+    const qtyPlus1 = document.getElementById('qtyPlus1');
+    const qtyPlus5 = document.getElementById('qtyPlus5');
+
+    let selectedStore = null;
+    let selectedProduct = null;
+    let productPopupStores = [];
+
+    function getSortedStoresForPopup() {
+        const stores = getUserStores();
+        return stores.slice();
+    }
+
+    function renderStoreSelectorList() {
+        storeSelectorList.innerHTML = productPopupStores.map(s => {
+            return '<div class="selector-item" data-store-id="' + (s.id || '').replace(/"/g, '&quot;') + '" data-store-name="' + (s.name || '').replace(/"/g, '&quot;') + '">' + (s.name || 'Store') + '</div>';
+        }).join('');
+        storeSelectorList.querySelectorAll('.selector-item').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const store = productPopupStores.find(s => (s.id || '') === (el.dataset.storeId || ''));
+                if (store) {
+                    selectedStore = { id: store.id, name: store.name };
+                    selectedStoreName.textContent = store.name;
+                    storeSelectorDropdown.classList.remove('expanded');
+                }
+            });
+        });
+    }
+
+    function renderProductSelectorList() {
+        const products = getUserProducts();
+        productSelectorList.innerHTML = products.map(p => {
+            const imgHtml = p.image ? '<img src="' + p.image + '" alt="" style="width:36px;height:36px;border-radius:8px;object-fit:cover">' : '<span style="width:36px;height:36px;border-radius:8px;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:16px">📦</span>';
+            return '<div class="selector-item" data-product-id="' + (p.id || '').replace(/"/g, '&quot;') + '">' + imgHtml + '<span>' + (p.name || 'Product').replace(/</g, '&lt;') + '</span></div>';
+        }).join('');
+        productSelectorList.querySelectorAll('.selector-item').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const products = getUserProducts();
+                const p = products.find(pr => (pr.id || '') === el.dataset.productId);
+                if (p) {
+                    selectedProduct = p;
+                    selectedProductName.textContent = p.name || 'Product';
+                    selectedProductPreview.innerHTML = p.image ? '<img src="' + p.image + '" alt="">' : '📦';
+                    productSelectorDropdown.classList.remove('expanded');
+                }
+            });
+        });
+    }
+
+    function updateQtyDisplay() {
+        const val = parseInt(qtyInput.value, 10);
+        const num = isNaN(val) ? 0 : Math.max(0, val);
+        qtyInput.value = num;
+    }
+
+    function openProductPopup(store) {
+        productPopup.dataset.storeId = store.id;
+        productPopup.dataset.storeName = store.name;
+        selectedStore = store;
+        selectedStoreName.textContent = store.name;
+
+        productPopupStores = getSortedStoresForPopup();
+        renderStoreSelectorList();
+
+        const products = getUserProducts();
+
+        if (products.length === 0) {
+            productPopupContent.style.display = 'none';
+            productEmptyState.style.display = 'block';
+            productPopup.classList.add('visible');
+            return;
+        }
+
+        productEmptyState.style.display = 'none';
+        productPopupContent.style.display = 'block';
+
+        selectedProduct = products[0];
+        selectedProductName.textContent = selectedProduct.name || 'Product';
+        selectedProductPreview.innerHTML = selectedProduct.image ? '<img src="' + selectedProduct.image + '" alt="">' : '📦';
+        renderProductSelectorList();
+
+        qtyInput.value = '0';
+        storeSelectorDropdown.classList.remove('expanded');
+        productSelectorDropdown.classList.remove('expanded');
+
+        productPopup.classList.add('visible');
+    }
+
+    // Stats card buttons
+    document.getElementById('storesSetupBtn').addEventListener('click', openStoreSetupPopup);
+    document.getElementById('productsSetupBtn').addEventListener('click', openProductSetupPopup);
+
+    // Helper: calculate distance between two coordinates (in meters)
+    function calculateDistanceMeters(lat1, lng1, lat2, lng2) {
+        const R = 6371000; // Earth's radius in meters
+        const rad = Math.PI / 180;
+        const dLat = (lat2 - lat1) * rad;
+        const dLng = (lng2 - lng1) * rad;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
+                  Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    // Store selection function
+    function showStoreSelection() {
+        storeEmptyState.style.display = 'none';
+        storeListEl.style.display = 'flex';
+
+        storeListEl.innerHTML = stores.map(s => {
+            return '<div class="store-item" data-store-id="' + (s.id || '').replace(/"/g, '"') + '" data-store-name="' + (s.name || '').replace(/"/g, '"') + '">' +
+                '<span class="store-name">' + (s.name || 'Store') + '</span>' +
+                '<button class="store-edit-btn" data-store-id="' + (s.id || '') + '">✏️</button>' +
+                '</div>';
+        }).join('');
+
+        storeListEl.querySelectorAll('.store-item').forEach(el => {
+            el.addEventListener('click', (e) => {
+                // Don't trigger if clicking edit button
+                if (e.target.classList.contains('store-edit-btn')) return;
+                const store = { id: el.dataset.storeId, name: (el.querySelector('.store-name') || {}).textContent || el.dataset.storeName || 'Store' };
+                closeStorePopupFn();
+                openProductPopup(store);
+            });
+        });
+
+        // Add edit store functionality
+        storeListEl.querySelectorAll('.store-edit-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const storeId = btn.dataset.storeId;
+                const store = stores.find(s => s.id === storeId);
+                if (store) {
+                    openEditStorePopup(store);
+                }
+            });
+        });
+
+        storePopup.classList.add('visible');
+    }
+
+    // Helper: calculate distance between two coordinates (in meters)
+    function calculateDistanceMeters(lat1, lng1, lat2, lng2) {
+        const R = 6371000; // Earth's radius in meters
+        const rad = Math.PI / 180;
+        const dLat = (lat2 - lat1) * rad;
+        const dLng = (lng2 - lng1) * rad;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
+                  Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    // Show loading notification for GPS
+    function showGPSLoadingNotification() {
+        const lang = localStorage.getItem('eps_language') || 'en';
+        const loadingText = lang === 'bg' ? 'Търсене на местоположение...' : 'Finding your location...';
+        
+        const notification = document.createElement('div');
+        notification.id = 'gpsLoadingNotification';
+        notification.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            font-weight: 500;
+            font-size: 14px;
+            z-index: 1002;
+            text-align: center;
+        `;
+        notification.innerHTML = `<div style="margin-bottom: 10px;"><img src="i.svg" alt="Pin" style="width:24px;height:24px;"></div>${loadingText}`;
+        document.body.appendChild(notification);
+        return notification;
+    }
+
+    // Get user's current GPS position
+    function getUserPosition() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocation not supported'));
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    resolve({
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    });
+                },
+                (error) => {
+                    reject(error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        });
+    }
+
+    // Find closest store based on GPS coordinates
+    function findClosestStore(userLat, userLng) {
+        const stores = getUserStores();
+        if (stores.length === 0) return null;
+        
+        // Filter stores with valid GPS coordinates
+        const storesWithCoords = stores.filter(s => s.lat && s.lng);
+        if (storesWithCoords.length === 0) return null;
+        
+        // Find closest store
+        let closestStore = null;
+        let minDistance = Infinity;
+        
+        storesWithCoords.forEach(store => {
+            const distance = calculateDistanceMeters(userLat, userLng, store.lat, store.lng);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestStore = store;
+            }
+        });
+        
+        return closestStore;
+    }
+
+    // Make delivery button - with GPS auto-detect closest store
+    makeDeliveryBtn.addEventListener('click', async () => {
+        await getCurrentUserId();
+        const stores = getUserStores();
+
+        if (stores.length === 0) {
+            storeListEl.innerHTML = '';
+            storeListEl.style.display = 'none';
+            storeEmptyState.style.display = 'block';
+            storePopup.classList.add('visible');
+            return;
+        }
+
+        // Try to get GPS location and find closest store
+        let closestStore = null;
+        let gpsError = null;
+        
+        try {
+            // Show loading notification
+            const loadingNotification = showGPSLoadingNotification();
+            
+            const position = await getUserPosition();
+            closestStore = findClosestStore(position.lat, position.lng);
+            
+            // Remove loading notification
+            loadingNotification.remove();
+        } catch (error) {
+            console.log('GPS error or denied:', error.message);
+            gpsError = error;
+            // Continue without GPS - user can manually select store
+        }
+
+        if (closestStore) {
+            // Show notification about closest store
+            const lang = localStorage.getItem('eps_language') || 'en';
+            const closestText = lang === 'bg' ? 'Най-близък магазин намерен' : 'Closest store found';
+            const confirmText = lang === 'bg' ? 'Продължи към' : 'Continue to';
+            
+            const confirmMsg = document.createElement('div');
+            confirmMsg.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 16px;
+                font-weight: 600;
+                font-size: 14px;
+                z-index: 1001;
+                box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+                text-align: center;
+                max-width: 300px;
+            `;
+            confirmMsg.innerHTML = `
+                <div style="font-size: 12px; opacity: 0.9;"><img src="i.svg" alt="Pin" style="width:14px;height:14px;display:inline;margin-right:4px;"> ${closestText}</div>
+                <div style="font-size: 18px; font-weight: 700; margin: 8px 0;">${closestStore.name}</div>
+                <div style="font-size: 12px; opacity: 0.9;">${confirmText}</div>
+            `;
+            document.body.appendChild(confirmMsg);
+            
+            // Auto-open product popup with closest store after showing notification
+            setTimeout(() => {
+                confirmMsg.remove();
+                closeStorePopupFn();
+                openProductPopup(closestStore);
+            }, 1500);
+            
+            return;
+        }
+
+        // If no GPS or no closest store found, show regular store selection
+        storeEmptyState.style.display = 'none';
+        storeListEl.style.display = 'flex';
+
+        storeListEl.innerHTML = stores.map(s => {
+            return '<div class="store-item" data-store-id="' + (s.id || '').replace(/"/g, '"') + '" data-store-name="' + (s.name || '').replace(/"/g, '"') + '">' +
+                '<span class="store-name">' + (s.name || 'Store') + '</span>' +
+                '</div>';
+        }).join('');
+
+        storeListEl.querySelectorAll('.store-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const store = { id: el.dataset.storeId, name: (el.querySelector('.store-name') || {}).textContent || el.dataset.storeName || 'Store' };
+                closeStorePopupFn();
+                openProductPopup(store);
+            });
+        });
+
+        storePopup.classList.add('visible');
+    });
+
+    openStoreSetupFromEmpty.addEventListener('click', () => {
+        closeStorePopupFn();
+        openStoreSetupPopup();
+    });
+
+    openProductSetupFromEmpty.addEventListener('click', () => {
+        closeProductPopupFn();
+        openProductSetupPopup();
+    });
+
+    closeStorePopup.addEventListener('click', closeStorePopupFn);
+    storePopup.addEventListener('click', (e) => { if (e.target === storePopup) closeStorePopupFn(); });
+
+    storeSelectorTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        productSelectorDropdown.classList.remove('expanded');
+        storeSelectorDropdown.classList.toggle('expanded');
+    });
+    productSelectorTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        storeSelectorDropdown.classList.remove('expanded');
+        productSelectorDropdown.classList.toggle('expanded');
+    });
+    document.addEventListener('click', () => {
+        storeSelectorDropdown.classList.remove('expanded');
+        productSelectorDropdown.classList.remove('expanded');
+    });
+    storeSelectorDropdown.addEventListener('click', (e) => e.stopPropagation());
+    productSelectorDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+    function adjustQty(delta) {
+        const val = parseInt(qtyInput.value, 10) || 0;
+        const next = Math.max(0, val + delta);
+        qtyInput.value = next;
+    }
+    qtyMinus5.addEventListener('click', () => adjustQty(-5));
+    qtyMinus1.addEventListener('click', () => adjustQty(-1));
+    qtyPlus1.addEventListener('click', () => adjustQty(1));
+    qtyPlus5.addEventListener('click', () => adjustQty(5));
+    qtyInput.addEventListener('input', updateQtyDisplay);
+    qtyInput.addEventListener('blur', updateQtyDisplay);
+
+    confirmDeliveryBtn.addEventListener('click', () => {
+        const qty = parseInt(qtyInput.value, 10) || 0;
+        
+        // If qty is 0, close the popup
+        if (qty === 0) {
+            closeProductPopupFn();
+            return;
+        }
+
+        const today = new Date();
+        const dateKey = getDateKey(today);
+        if (!deliveries[dateKey]) {
+            deliveries[dateKey] = [];
+        }
+        deliveries[dateKey].push({
+            storeName: selectedStore.name,
+            productName: selectedProduct.name,
+            quantity: qty,
+            priceUSD: (selectedProduct && selectedProduct.priceUSD) ? Number(selectedProduct.priceUSD) : 0
+        });
+        saveDeliveries();
+        renderCalendar();
+        updateStats();
+
+        // Show success message
+        const successMsg = document.createElement('div');
+        successMsg.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 16px;
+            z-index: 1000;
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+            text-align: center;
+        `;
+        const lang3 = getCurrentLanguage();
+        const t3 = translations[lang3] || translations.en;
+        successMsg.textContent = `${t3.deliverySuccess} ${qty} units to ${selectedStore.name}`;
+        document.body.appendChild(successMsg);
+
+        // Remove success message after 2 seconds
+        setTimeout(() => successMsg.remove(), 2000);
+
+        // Reset quantity and prompt for next delivery
+        qtyInput.value = '0';
+        updateQtyDisplay();
+        
+        // Update button text to show they can continue or close
+        const origBtnText = confirmDeliveryBtn.textContent;
+        const lang4 = getCurrentLanguage();
+        const t4 = translations[lang4] || translations.en;
+        confirmDeliveryBtn.textContent = t4.enter0ToClose;
+        
+        // Reset button text after a moment
+        setTimeout(() => {
+            confirmDeliveryBtn.textContent = origBtnText;
+        }, 2000);
+    });
+
+    closeProductPopup.addEventListener('click', closeProductPopupFn);
+    productPopup.addEventListener('click', (e) => { if (e.target === productPopup) closeProductPopupFn(); });
+
+    // Store setup
+    const storeSetupBtn = document.getElementById('storeSetupBtn');
+    const storeSetupPopup = document.getElementById('storeSetupPopup');
+    const closeStoreSetupPopup = document.getElementById('closeStoreSetupPopup');
+    const storeNameInput = document.getElementById('storeNameInput');
+    const storeOwnerInput = document.getElementById('storeOwnerInput');
+    const storeLocationInput = document.getElementById('storeLocationInput');
+    const saveStoreBtn = document.getElementById('saveStoreBtn');
+    const openGoogleMapsBtn = document.getElementById('openGoogleMapsBtn');
+
+    function openStoreSetupPopup() {
+        storeSetupPopup.classList.add('visible');
+        storeNameInput.value = '';
+        storeOwnerInput.value = '';
+        storeLocationInput.value = '';
+    }
+
+    function closeStoreSetupPopupFn() {
+        storeSetupPopup.classList.remove('visible');
+    }
+
+    closeStoreSetupPopup.addEventListener('click', closeStoreSetupPopupFn);
+    storeSetupPopup.addEventListener('click', (e) => { if (e.target === storeSetupPopup) closeStoreSetupPopupFn(); });
+
+    openGoogleMapsBtn.addEventListener('click', () => {
+        const query = encodeURIComponent(storeLocationInput.value || '');
+        const mapsUrl = query ? 
+            'https://www.google.com/maps/search/?api=1&query=' + query :
+            'https://www.google.com/maps';
+        window.open(mapsUrl, '_blank');
+    });
+
+    storeLocationInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            openGoogleMapsBtn.click();
+        }
+    });
+
+    saveStoreBtn.addEventListener('click', async () => {
+        const name = storeNameInput.value.trim();
+        const owner = storeOwnerInput.value.trim();
+        const location = storeLocationInput.value.trim();
+
+        if (!name || !owner || !location) {
+            const lang = getCurrentLanguage();
+            const t = translations[lang] || translations.en;
+            alert(t.pleaseFillAllFields);
+            return;
+        }
+
+        await getCurrentUserId();
+        const coords = parseLatLngFromLocation(location);
+        const store = {
+            id: 's' + Date.now(),
+            name,
+            owner,
+            location,
+            lat: coords ? coords.lat : null,
+            lng: coords ? coords.lng : null
+        };
+        const stores = getUserStores();
+        stores.push(store);
+        saveUserStores(stores);
+        updateStats();
+        {
+            const lang = getCurrentLanguage();
+            const t = translations[lang] || translations.en;
+            alert(t.storeSavedSuccess);
+        }
+        closeStoreSetupPopupFn();
+    });
+
+    // Product setup
+    const productSetupBtn = document.getElementById('productSetupBtn');
+    const productSetupPopup = document.getElementById('productSetupPopup');
+    const closeProductSetupPopup = document.getElementById('closeProductSetupPopup');
+    const productNameInput = document.getElementById('productNameInput');
+    const productPriceInput = document.getElementById('productPriceInput');
+    const productImagePreview = document.getElementById('productImagePreview');
+    const productImageUploadBtn = document.getElementById('productImageUploadBtn');
+    const productImageInput = document.getElementById('productImageInput');
+    const saveProductBtn = document.getElementById('saveProductBtn');
+    const productPriceCurrency = document.getElementById('productPriceCurrency');
+    const editProductPriceCurrency = document.getElementById('editProductPriceCurrency');
+    const manageProductsBtn = document.getElementById('manageProductsBtn');
+    const manageProductsPopup = document.getElementById('manageProductsPopup');
+    const manageProductsList = document.getElementById('manageProductsList');
+    const closeManageProductsPopup = document.getElementById('closeManageProductsPopup');
+
+    let productImageData = null;
+
+    function openProductSetupPopup() {
+        productSetupPopup.classList.add('visible');
+        productNameInput.value = '';
+        if (productPriceInput) productPriceInput.value = '';
+        productImageData = null;
+        productImagePreview.style.display = 'none';
+        productImagePreview.src = '';
+    }
+
+    function updateCurrencyLabels() {
+        try {
+            const curr = getCurrency();
+            const lang = getCurrentLanguage();
+            const t = translations[lang] || translations.en;
+            const label = (t['currency_' + curr]) ? t['currency_' + curr] : curr;
+            if (productPriceCurrency) productPriceCurrency.textContent = label;
+            if (editProductPriceCurrency) editProductPriceCurrency.textContent = label;
+        } catch (e) { /* ignore */ }
+    }
+
+    // Wire manage products button
+    if (manageProductsBtn) {
+        manageProductsBtn.addEventListener('click', () => openManageProductsPopup());
+    }
+
+    function openManageProductsPopup() {
+        const products = getUserProducts();
+        manageProductsList.innerHTML = '';
+        if (!products || products.length === 0) {
+            const el = document.createElement('div');
+            el.textContent = (translations[getCurrentLanguage()] || translations.en).noProductsMessage || 'No products';
+            el.style.color = '#666';
+            manageProductsList.appendChild(el);
+        } else {
+            products.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'manage-product-item';
+                item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:var(--card-bg,#fff);';
+                const img = document.createElement('div');
+                img.style.cssText = 'width:40px;height:40px;border-radius:8px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#eaeaea';
+                img.innerHTML = p.image ? '<img src="' + p.image + '" style="width:100%;height:100%;object-fit:cover">' : '📦';
+                const name = document.createElement('div');
+                name.style.cssText = 'flex:1;display:flex;flex-direction:column;';
+                const title = document.createElement('div');
+                title.textContent = p.name || 'Product';
+                title.style.fontWeight = '600';
+
+                // Price input (in display currency)
+                const price = document.createElement('div');
+                const priceInput = document.createElement('input');
+                priceInput.type = 'number';
+                priceInput.step = '0.01';
+                priceInput.min = '0';
+                priceInput.style.cssText = 'width:100px;padding:6px;border-radius:8px;border:1px solid #ddd;';
+                try {
+                    const curr = getCurrency();
+                    const visible = (p.priceUSD != null) ? convertAmount(p.priceUSD, 'USD', curr) : (p.price != null ? p.price : 0);
+                    priceInput.value = (visible != null) ? Number(visible).toFixed(2) : '';
+                } catch (e) { priceInput.value = '' }
+                price.appendChild(priceInput);
+
+                name.appendChild(title);
+                name.appendChild(price);
+
+                const actions = document.createElement('div');
+                actions.style.display = 'flex';
+                actions.style.gap = '8px';
+
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'action-btn primary';
+                saveBtn.textContent = (translations[getCurrentLanguage()] || translations.en).save || 'Save';
+                saveBtn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    const v = parseFloat(priceInput.value);
+                    if (!isFinite(v)) return;
+                    const curr = getCurrency();
+                    const priceUSD = convertAmount(v, curr, 'USD');
+                    const all = getUserProducts();
+                    const idx = all.findIndex(x => x.id === p.id);
+                    if (idx !== -1) {
+                        all[idx] = { ...all[idx], priceUSD };
+                        saveUserProducts(all);
+                        try { updateStats(); } catch(e) {}
+                        try { renderProductSelectorList(); } catch(e) {}
+                        try { renderProductSelectorListWithEdit(); } catch(e) {}
+                        const lang = getCurrentLanguage();
+                        const t = translations[lang] || translations.en;
+                        alert(t.productUpdatedSuccess || t.productSavedSuccess);
+                    }
+                });
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'action-btn secondary';
+                editBtn.textContent = (translations[getCurrentLanguage()] || translations.en).editProduct || 'Edit';
+                editBtn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    openEditProductPopup(p);
+                    manageProductsPopup.classList.remove('visible');
+                });
+
+                actions.appendChild(saveBtn);
+                actions.appendChild(editBtn);
+
+                item.appendChild(img);
+                item.appendChild(name);
+                item.appendChild(actions);
+                manageProductsList.appendChild(item);
+            });
+        }
+        manageProductsPopup.classList.add('visible');
+    }
+
+    function closeProductSetupPopupFn() {
+        productSetupPopup.classList.remove('visible');
+    }
+
+    closeProductSetupPopup.addEventListener('click', closeProductSetupPopupFn);
+    productSetupPopup.addEventListener('click', (e) => { if (e.target === productSetupPopup) closeProductSetupPopupFn(); });
+
+    closeManageProductsPopup.addEventListener('click', () => manageProductsPopup.classList.remove('visible'));
+    manageProductsPopup.addEventListener('click', (e) => { if (e.target === manageProductsPopup) manageProductsPopup.classList.remove('visible'); });
+
+    productImageUploadBtn.addEventListener('click', () => {
+        productImageInput.click();
+    });
+
+    productImageInput.addEventListener('change', () => {
+        const file = productImageInput.files && productImageInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const dataUrl = reader.result;
+            if (typeof dataUrl === 'string') {
+                productImageData = dataUrl;
+                productImagePreview.src = dataUrl;
+                productImagePreview.style.display = 'block';
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    saveProductBtn.addEventListener('click', async () => {
+        const name = productNameInput.value.trim();
+        const priceInputVal = parseFloat(productPriceInput && productPriceInput.value) || 0;
+        const curr = getCurrency();
+        const rates = await loadExchangeRates();
+        const priceUSD = convertAmount(priceInputVal, curr, 'USD');
+
+        if (!name) {
+            const lang = getCurrentLanguage();
+            const t = translations[lang] || translations.en;
+            alert(t.pleaseFillAllFields);
+            return;
+        }
+
+        await getCurrentUserId();
+        const product = {
+            id: 'p' + Date.now(),
+            name,
+            image: productImageData || null,
+            priceUSD: priceUSD
+        };
+        const products = getUserProducts();
+        products.push(product);
+        saveUserProducts(products);
+
+        updateStats();
+        {
+            const lang = getCurrentLanguage();
+            const t = translations[lang] || translations.en;
+            alert(t.productSavedSuccess);
+        }
+        closeProductSetupPopupFn();
+        // refresh list UI in case manage popup is open
+        try { if (manageProductsPopup && manageProductsPopup.classList.contains('visible')) openManageProductsPopup(); } catch (e) {}
+    });
+
+    // Edit store popup functions
+    let editingStore = null;
+    
+    function openEditStorePopup(store) {
+        editingStore = store;
+        document.getElementById('editStoreNameInput').value = store.name || '';
+        document.getElementById('editStoreOwnerInput').value = store.owner || '';
+        document.getElementById('editStoreLocationInput').value = store.location || '';
+        document.getElementById('editStorePopup').classList.add('visible');
+    }
+    
+    function closeEditStorePopup() {
+        document.getElementById('editStorePopup').classList.remove('visible');
+        editingStore = null;
+    }
+    
+    function saveEditStore() {
+        if (!editingStore) return;
+        
+        const name = document.getElementById('editStoreNameInput').value.trim();
+        const owner = document.getElementById('editStoreOwnerInput').value.trim();
+        const location = document.getElementById('editStoreLocationInput').value.trim();
+        
+        if (!name || !owner || !location) {
+            const lang = getCurrentLanguage();
+            const t = translations[lang] || translations.en;
+            alert(t.pleaseFillAllFields);
+            return;
+        }
+        
+        const coords = parseLatLngFromLocation(location);
+        const stores = getUserStores();
+        const storeIndex = stores.findIndex(s => s.id === editingStore.id);
+        
+        if (storeIndex !== -1) {
+            stores[storeIndex] = {
+                ...stores[storeIndex],
+                name,
+                owner,
+                location,
+                lat: coords ? coords.lat : stores[storeIndex].lat,
+                lng: coords ? coords.lng : stores[storeIndex].lng
+            };
+            saveUserStores(stores);
+            updateStats();
+            {
+                const lang = getCurrentLanguage();
+                const t = translations[lang] || translations.en;
+                alert(t.storeUpdatedSuccess || t.storeSavedSuccess);
+            }
+        }
+        
+        closeEditStorePopup();
+        closeStorePopupFn();
+    }
+    
+    function deleteEditStore() {
+        if (!editingStore) return;
+        
+        if (confirm('Are you sure you want to delete this store?')) {
+            const stores = getUserStores();
+            const storeIndex = stores.findIndex(s => s.id === editingStore.id);
+            
+            if (storeIndex !== -1) {
+                stores.splice(storeIndex, 1);
+                saveUserStores(stores);
+                updateStats();
+            }
+            
+            closeEditStorePopup();
+            closeStorePopupFn();
+        }
+    }
+    
+    // Edit product popup functions
+    let editingProduct = null;
+    let editProductImageData = null;
+    
+    function openEditProductPopup(product) {
+        editingProduct = product;
+        editProductImageData = product.image || null;
+        document.getElementById('editProductNameInput').value = product.name || '';
+        const editPrice = document.getElementById('editProductPriceInput');
+        if (editPrice) {
+            // show price in current currency
+            const curr = getCurrency();
+            const showVal = (product.priceUSD != null) ? convertAmount(product.priceUSD, 'USD', curr) : (product.price || 0);
+            editPrice.value = (showVal != null) ? Number(showVal).toFixed(2) : '';
+        }
+        const preview = document.getElementById('editProductImagePreview');
+        if (product.image) {
+            preview.src = product.image;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+            preview.src = '';
+        }
+        document.getElementById('editProductPopup').classList.add('visible');
+    }
+    
+    function closeEditProductPopup() {
+        document.getElementById('editProductPopup').classList.remove('visible');
+        editingProduct = null;
+        editProductImageData = null;
+    }
+    
+    function saveEditProduct() {
+        if (!editingProduct) return;
+        
+        const name = document.getElementById('editProductNameInput').value.trim();
+        
+        if (!name) {
+            const lang = getCurrentLanguage();
+            const t = translations[lang] || translations.en;
+            alert(t.pleaseFillAllFields);
+            return;
+        }
+        
+        const products = getUserProducts();
+        const productIndex = products.findIndex(p => p.id === editingProduct.id);
+        
+        if (productIndex !== -1) {
+            products[productIndex] = {
+                ...products[productIndex],
+                name,
+                image: editProductImageData || products[productIndex].image,
+                priceUSD: (function(){
+                    const v = document.getElementById('editProductPriceInput') && parseFloat(document.getElementById('editProductPriceInput').value);
+                    if (!isFinite(v)) return products[productIndex].priceUSD || 0;
+                    const curr = getCurrency();
+                    return convertAmount(v, curr, 'USD');
+                })()
+            };
+            saveUserProducts(products);
+            updateStats();
+            {
+                const lang = getCurrentLanguage();
+                const t = translations[lang] || translations.en;
+                alert(t.productUpdatedSuccess || t.productSavedSuccess);
+            }
+        }
+        
+        closeEditProductPopup();
+    }
+    
+    function deleteEditProduct() {
+        if (!editingProduct) return;
+        
+        if (confirm('Are you sure you want to delete this product?')) {
+            const products = getUserProducts();
+            const productIndex = products.findIndex(p => p.id === editingProduct.id);
+            
+            if (productIndex !== -1) {
+                products.splice(productIndex, 1);
+                saveUserProducts(products);
+                updateStats();
+            }
+            
+            closeEditProductPopup();
+        }
+    }
+    
+    // Set up edit store popup event listeners
+    document.getElementById('closeEditStorePopup').addEventListener('click', closeEditStorePopup);
+    document.getElementById('editStorePopup').addEventListener('click', (e) => { if (e.target.id === 'editStorePopup') closeEditStorePopup(); });
+    document.getElementById('saveEditStoreBtn').addEventListener('click', saveEditStore);
+    document.getElementById('deleteStoreBtn').addEventListener('click', deleteEditStore);
+    document.getElementById('openEditGoogleMapsBtn').addEventListener('click', () => {
+        const query = encodeURIComponent(document.getElementById('editStoreLocationInput').value || '');
+        const mapsUrl = query ? 'https://www.google.com/maps/search/?api=1&query=' + query : 'https://www.google.com/maps';
+        window.open(mapsUrl, '_blank');
+    });
+    
+    // Set up edit product popup event listeners
+    document.getElementById('closeEditProductPopup').addEventListener('click', closeEditProductPopup);
+    document.getElementById('editProductPopup').addEventListener('click', (e) => { if (e.target.id === 'editProductPopup') closeEditProductPopup(); });
+    document.getElementById('saveEditProductBtn').addEventListener('click', saveEditProduct);
+    document.getElementById('deleteProductBtn').addEventListener('click', deleteEditProduct);
+    document.getElementById('editProductImageUploadBtn').addEventListener('click', () => {
+        document.getElementById('editProductImageInput').click();
+    });
+    
+    // Add hidden file input for edit product
+    const editProductImageInput = document.createElement('input');
+    editProductImageInput.type = 'file';
+    editProductImageInput.accept = 'image/*';
+    editProductImageInput.style.display = 'none';
+    document.body.appendChild(editProductImageInput);
+    
+    editProductImageInput.addEventListener('change', () => {
+        const file = editProductImageInput.files && editProductImageInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const dataUrl = reader.result;
+            if (typeof dataUrl === 'string') {
+                editProductImageData = dataUrl;
+                const preview = document.getElementById('editProductImagePreview');
+                preview.src = dataUrl;
+                preview.style.display = 'block';
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    // Add edit button to products in product selector
+    function renderProductSelectorListWithEdit() {
+        const products = getUserProducts();
+        productSelectorList.innerHTML = products.map(p => {
+            const imgHtml = p.image ? '<img src="' + p.image + '" alt="" style="width:36px;height:36px;border-radius:8px;object-fit:cover">' : '<span style="width:36px;height:36px;border-radius:8px;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:16px">📦</span>';
+            // compute display price from stored priceUSD
+            let displayPrice = '';
+            try {
+                const curr = getCurrency();
+                const stored = (p.priceUSD != null) ? p.priceUSD : (p.price != null ? convertAmount(p.price, curr, curr) : 0);
+                if (stored != null) {
+                    const visible = (p.priceUSD != null) ? convertAmount(p.priceUSD, 'USD', curr) : stored;
+                    displayPrice = '<span style="margin-left:8px;color:#666;font-size:13px;">' + (visible != null ? Number(visible).toFixed(2) + ' ' + curr : '') + '</span>';
+                }
+            } catch (e) { displayPrice = ''; }
+            return '<div class="selector-item" data-product-id="' + (p.id || '').replace(/"/g, '"') + '">' + imgHtml + '<span style="flex:1;">' + (p.name || 'Product').replace(/</g, '<') + displayPrice + '</span><button class="product-edit-btn" data-product-id="' + (p.id || '') + '">✏️</button></div>';
+        }).join('');
+        
+        productSelectorList.querySelectorAll('.selector-item').forEach(el => {
+            el.addEventListener('click', (e) => {
+                if (e.target.classList.contains('product-edit-btn')) return;
+                e.stopPropagation();
+                const products = getUserProducts();
+                const p = products.find(pr => (pr.id || '') === el.dataset.productId);
+                if (p) {
+                    selectedProduct = p;
+                    selectedProductName.textContent = p.name || 'Product';
+                    selectedProductPreview.innerHTML = p.image ? '<img src="' + p.image + '" alt="">' : '📦';
+                    productSelectorDropdown.classList.remove('expanded');
+                }
+            });
+        });
+        
+        // Add edit product functionality
+        productSelectorList.querySelectorAll('.product-edit-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const productId = btn.dataset.productId;
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    openEditProductPopup(product);
+                }
+            });
+        });
+    }
+    
+    // Translation support
+    const translations = {
+        en: {
+            pleaseFillAllFields: 'Please fill in all fields',
+            storeSavedSuccess: 'Store saved successfully!',
+            productSavedSuccess: 'Product saved successfully!',
+            reportCopied: '✓ Report copied to clipboard!',
+            reportDownloaded: '✓ Report downloaded!',
+            enter0ToClose: 'Enter 0 to close',
+            hello: 'Hello',
+            stores: 'Stores',
+            products: 'Products',
+            distributedProduct: 'Distributed product',
+            makeDelivery: 'Make a delivery',
+            chooseStore: 'Choose a store',
+            chooseProduct: 'Choose a product',
+            setUpStores: 'Set up your stores',
+            setUpStore: 'Set up a store',
+            storeName: 'Store name',
+            storeLocation: 'Store location',
+            ownerNames: "Owner/s names",
+            addProduct: 'Add a product',
+            productName: 'Product name',
+            enterStoreName: 'Enter store name',
+            enterOwnerNames: 'Enter owner name(s)',
+            enterStoreLocation: 'Enter address or search on Google Maps',
+            enterProductName: 'Enter product name',
+            quantity: 'Quantity',
+            shareText: 'Share Text',
+            downloadExcel: 'Download Excel',
+            noDeliveries: 'No deliveries on this day',
+            noStoresMessage: "You haven't set up any stores yet. Set up the stores you distribute to to get started.",
+            noProductsMessage: "You haven't set up any products yet. Add the products you distribute to get started.",
+            save: 'Save',
+            deliverySuccess: 'Delivered',
+            editDelivery: 'Edit Delivery',
+            deleteDelivery: 'Delete',
+            saveChanges: 'Save Changes',
+            store: 'Store',
+            product: 'Product',
+            january: 'January',
+            february: 'February',
+            march: 'March',
+            april: 'April',
+            may: 'May',
+            june: 'June',
+            july: 'July',
+            august: 'August',
+            september: 'September',
+            october: 'October',
+            november: 'November',
+            december: 'December',
+            sun: 'Sun',
+            mon: 'Mon',
+            tue: 'Tue',
+            wed: 'Wed',
+            thu: 'Thu',
+            fri: 'Fri',
+            sat: 'Sat',
+            gpsTracking: 'GPS Tracking',
+            nearbyStores: 'Nearby Stores',
+            sortedByDistance: 'Sorted by distance',
+            yourLocation: 'Your Location',
+            distance: 'Distance',
+            nearby: 'NEARBY',
+            settings: 'Settings',
+            changeProfilePicture: 'Change picture',
+            signOut: 'Sign out',
+            startGPS: 'Start GPS Tracking',
+            stopGPS: 'Stop GPS Tracking',
+            loadingGPS: 'Loading GPS...',
+            gpsActive: 'GPS Active',
+            gpsError: 'GPS Error',
+            owner: 'Owner',
+            arrived: 'You\'ve arrived at',
+            findingLocation: 'Finding your location...',
+            closestStoreFound: 'Closest store found',
+            continueTo: 'Continue to',
+            skip: 'Skip',
+            next: 'Next',
+            welcome: 'Welcome to ePS!',
+            introStep1Title: 'Welcome to ePS',
+            introStep1Desc: 'Track your product deliveries efficiently with our app. Let\'s get you set up!',
+            introStep2Title: 'Set Up Your Stores',
+            introStep2Desc: 'Add the stores you distribute to. Click the Stores card to create your first store.',
+            introStep3Title: 'Add Your Products',
+            introStep3Desc: 'Create a list of products you deliver. Click the Products card to add them.',
+            introStep4Title: 'Make a Delivery',
+            introStep4Desc: 'Use the "Make a delivery" button to record each delivery with store and product info.',
+            introStep5Title: 'View Reports',
+            introStep5Desc: 'Click on any calendar day to view deliveries and export reports as text or Excel.',
+            getStarted: 'Get Started',
+            price: 'Price',
+            total: 'Total',
+            sum: 'Sum',
+            manageProducts: 'Manage products',
+            editProduct: 'Edit',
+        },
+        bg: {
+            settings: 'Настройки',
+            changeProfilePicture: 'Промяна на снимката на профила',
+            signOut: 'Изход',
+            hello: 'Здравейте',
+            stores: 'Магазини',
+            products: 'Продукти',
+            distributedProduct: 'Разпределена продукция',
+            makeDelivery: 'Направи доставка',
+            chooseStore: 'Избери магазин',
+            chooseProduct: 'Избери продукт',
+            setUpStores: 'Настрой магазините си',
+            setUpStore: 'Настрой магазин',
+            storeName: 'Име на магазина',
+            storeLocation: 'Местоположение на магазина',
+            ownerNames: 'Имена на собствениците',
+            addProduct: 'Добави продукт',
+            productName: 'Име на продукт',
+            enterStoreName: 'Въведи име на магазина',
+            enterOwnerNames: 'Въведи имена на собствениците',
+            enterStoreLocation: 'Въведи адрес или потърси в Google Maps',
+            enterProductName: 'Въведи име на продукта',
+            quantity: '\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E',
+            shareText: 'Сподели текст',
+            downloadExcel: 'Изтегли Excel',
+            noDeliveries: 'Няма доставки този ден',
+            noStoresMessage: 'Все още не си настроил магазини. Настрой магазините, на които разпределяш, за да започнеш.',
+            noProductsMessage: 'Все още не си настроил продукти. Добави продуктите, които разпределяш, за да започнеш.',
+            save: 'Запази',
+            deliverySuccess: 'Доставено',
+            editDelivery: 'Редактирай доставка',
+            deleteDelivery: 'Изтрий',
+            saveChanges: 'Запази промени',
+            store: 'Магазин',
+            product: 'Продукт',
+            january: 'Януари',
+            february: 'Февруари',
+            march: 'Март',
+            april: 'Април',
+            may: 'Май',
+            june: 'Юни',
+            july: 'Юли',
+            august: 'Август',
+            september: 'Септември',
+            october: 'Октомври',
+            november: 'Ноември',
+            december: 'Декември',
+            sun: 'Нед',
+            mon: 'Пон',
+            tue: 'Вто',
+            wed: 'Сря',
+            thu: 'Чет',
+            fri: 'Пет',
+            sat: 'Сяб',
+            gpsTracking: 'GPS проследяване',
+            nearbyStores: 'Близки магазини',
+            sortedByDistance: 'Сортирано по разстояние',
+            yourLocation: 'Вашето местоположение',
+            distance: 'Разстояние',
+            nearby: 'БЛИЗО',
+            startGPS: 'Начни GPS проследяване',
+            stopGPS: 'Спри GPS проследяване',
+            loadingGPS: 'Зареждане на GPS...',
+            gpsActive: 'GPS е активно',
+            gpsError: 'GPS грешка',
+            owner: 'Собственик',
+            arrived: 'Пристигнал(а) си при',
+            findingLocation: 'Търсене на местоположение...',
+            closestStoreFound: 'Най-близък магазин намерен',
+            continueTo: 'Продължи към',
+            skip: 'Пропусни',
+            next: 'Напред',
+            welcome: 'Добре дошли в ePS!',
+            introStep1Title: 'Добре дошли в ePS',
+            introStep1Desc: 'Проследявайте вашите доставки на продукти ефективно с нашето приложение. Нека да те настроим!',
+            introStep2Title: 'Настрой своите магазини',
+            introStep2Desc: 'Добави магазините, на които разпределяш. Кликни на картата Магазини, за да създадеш първия си магазин.',
+            introStep3Title: 'Добави своите продукти',
+            introStep3Desc: 'Създай списък с продуктите, които доставяш. Кликни на картата Продукти, за да ги добавиш.',
+            introStep4Title: 'Направи доставка',
+            introStep4Desc: 'Използвай бутона "Направи доставка", за да регистрираш всяка доставка с информация за магазина и продукта.',
+            introStep5Title: 'Преглед на доклади',
+            introStep5Desc: 'Кликни на всеки ден в календара, за да видиш доставките и да експортираш доклади като текст или Excel.',
+            getStarted: 'Да започнем',
+            price: 'Цена',
+            total: 'Общо',
+            sum: 'Сума',
+            manageProducts: 'Управление на продукти',
+            editProduct: 'Редактирай'
+        ,
+            storeUpdatedSuccess: 'Магазинът е актуализиран успешно!',
+            productUpdatedSuccess: 'Продуктът е актуализиран успешно!',
+            gpsModuleNotInitialized: 'GPS модулът не е инициализиран'
+        ,
+            pleaseFillAllFields: 'Моля, попълнете всички полета',
+            storeSavedSuccess: 'Магазинът е запазен успешно!',
+            productSavedSuccess: 'Продуктът е запазен успешно!',
+            reportCopied: '✓ Докладът е копиран в клипборда!',
+            reportDownloaded: '✓ Докладът е изтеглен!',
+            enter0ToClose: 'Въведете 0 за да затворите'
+        }
+    };
+
+    function getCurrentLanguage() {
+        return localStorage.getItem('eps_language') || 'en';
+    }
+
+    function translatePage() {
+        const lang = getCurrentLanguage();
+        const t = translations[lang] || translations.en;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (t[key]) {
+                // For titles with emoji, preserve emoji
+                if (el.id === 'gpsStatus' && t[key]) {
+                    el.textContent = t[key];
+                } else if (el.classList.contains('gps-title')) {
+                    el.innerHTML = '<img src="i.svg" alt="Pin" style="width:14px;height:14px;display:inline;margin-right:4px;"> ' + t[key];
+                        } else {
+                        el.textContent = t[key];
+                    }
+            }
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (t[key]) el.placeholder = t[key];
+        });
+            // Titles
+            document.querySelectorAll('[data-i18n-title]').forEach(el => {
+                const key = el.getAttribute('data-i18n-title');
+                if (t[key]) el.title = t[key];
+            });
+    }
+
+    function updateGreeting() {
+        const lang = getCurrentLanguage();
+        const t = translations[lang] || translations.en;
+        const name = localStorage.getItem('eps_user_name') || '';
+        const greetingEl = document.getElementById('greetingText');
+        if (greetingEl) {
+            if (name) {
+                greetingEl.textContent = t.hello + ', ' + name;
+            } else {
+                greetingEl.textContent = t.hello;
+            }
+        }
+    }
+
+    // Watch for theme changes
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'eps_theme') {
+            if (e.newValue === 'dark') {
+                document.body.classList.add('dark');
+            } else {
+                document.body.classList.remove('dark');
+            }
+            updateLogo();
+        }
+        if (e.key === 'eps_language') {
+            translatePage();
+            updateGreeting();
+        }
+        if (e.key === 'eps_currency') {
+            // update visible currency labels in product forms
+            try { updateCurrencyLabels(); } catch (e) {}
+        }
+    });
+
+    // App Intro Tutorial
+    const introSteps = [
+        {
+            icon: '👋',
+            titleKey: 'introStep1Title',
+            descKey: 'introStep1Desc',
+            highlightElement: null  // Welcome screen, no highlight
+        },
+        {
+            icon: '🏪',
+            titleKey: 'introStep2Title',
+            descKey: 'introStep2Desc',
+            highlightElement: '#storesSetupBtn'
+        },
+        {
+            icon: '📦',
+            titleKey: 'introStep3Title',
+            descKey: 'introStep3Desc',
+            highlightElement: '#productsSetupBtn'
+        },
+        {
+            icon: '🚚',
+            titleKey: 'introStep4Title',
+            descKey: 'introStep4Desc',
+            highlightElement: '#makeDeliveryBtn'
+        },
+        {
+            icon: '📊',
+            titleKey: 'introStep5Title',
+            descKey: 'introStep5Desc',
+            highlightElement: '#calendarGrid'
+        }
+    ];
+
+    let currentIntroStep = 0;
+
+    function createHighlight(element) {
+        // Remove any existing highlight
+        const existingHighlight = document.getElementById('introHighlight');
+        if (existingHighlight) {
+            existingHighlight.remove();
+        }
+
+        if (!element) return;
+
+        const rect = element.getBoundingClientRect();
+        const highlight = document.createElement('div');
+        highlight.id = 'introHighlight';
+        highlight.className = 'intro-highlight';
+        highlight.style.top = (rect.top + window.scrollY - 8) + 'px';
+        highlight.style.left = (rect.left + window.scrollX - 8) + 'px';
+        highlight.style.width = (rect.width + 16) + 'px';
+        highlight.style.height = (rect.height + 16) + 'px';
+        document.body.appendChild(highlight);
+    }
+
+    function removeHighlight() {
+        const highlight = document.getElementById('introHighlight');
+        if (highlight) {
+            highlight.remove();
+        }
+    }
+
+    function createIntroContent() {
+        const introContent = document.getElementById('introContent');
+        introContent.innerHTML = '';
+        
+        introSteps.forEach((step, index) => {
+            const t = translations[getCurrentLanguage()] || translations.en;
+            const stepEl = document.createElement('div');
+            stepEl.className = 'intro-step' + (index === 0 ? ' active' : '');
+            stepEl.innerHTML = `
+                <div class="intro-step-icon">${step.icon}</div>
+                <h2 class="intro-step-title">${t[step.titleKey]}</h2>
+                <p class="intro-step-desc">${t[step.descKey]}</p>
+            `;
+            introContent.appendChild(stepEl);
+        });
+    }
+
+    function createIntroDots() {
+        const introDots = document.getElementById('introDots');
+        introDots.innerHTML = '';
+        
+        for (let i = 0; i < introSteps.length; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'intro-dot' + (i === 0 ? ' active' : '');
+            dot.addEventListener('click', () => goToIntroStep(i));
+            introDots.appendChild(dot);
+        }
+    }
+
+    function goToIntroStep(stepIndex) {
+        if (stepIndex < 0 || stepIndex >= introSteps.length) return;
+        
+        currentIntroStep = stepIndex;
+        
+        // Update active step
+        document.querySelectorAll('.intro-step').forEach((step, i) => {
+            step.classList.toggle('active', i === stepIndex);
+        });
+        
+        // Update active dot
+        document.querySelectorAll('.intro-dot').forEach((dot, i) => {
+            dot.classList.toggle('active', i === stepIndex);
+        });
+        
+        // Update counter
+        document.querySelector('.intro-current-step').textContent = stepIndex + 1;
+        
+        // Update next button text
+        const nextBtn = document.getElementById('introNextBtn');
+        const t = translations[getCurrentLanguage()] || translations.en;
+        
+        if (stepIndex === introSteps.length - 1) {
+            nextBtn.textContent = t.getStarted || 'Get Started';
+        } else {
+            nextBtn.textContent = t.next || 'Next';
+        }
+        
+        // Show or hide highlight and position the modal so it doesn't cover the highlighted element
+        const step = introSteps[stepIndex];
+        const modal = document.querySelector('.intro-modal');
+        if (step.highlightElement) {
+            const element = document.querySelector(step.highlightElement);
+            if (element) {
+                createHighlight(element);
+
+                // After rendering/layout, check for overlap between modal and highlight
+                // and move modal above the highlighted element when they would overlap.
+                if (modal) {
+                    // Reset modal to default bottom-centered position first
+                    modal.style.bottom = '20px';
+                    modal.style.top = 'auto';
+                    modal.style.left = '50%';
+                    modal.style.transform = 'translateX(-50%)';
+
+                    // If this is the final step, keep the modal at the bottom (do not move it above)
+                    if (stepIndex === introSteps.length - 1) {
+                        // keep bottom position
+                        modal.style.bottom = '20px';
+                        modal.style.top = 'auto';
+                        modal.style.transform = 'translateX(-50%)';
+                    } else {
+                        setTimeout(() => {
+                            const modalRect = modal.getBoundingClientRect();
+                            const elRect = element.getBoundingClientRect();
+
+                            // If modal overlaps the highlighted element, place modal above the element
+                            const overlaps = modalRect.top < elRect.bottom && modalRect.bottom > elRect.top;
+                            if (overlaps) {
+                                const desiredTop = elRect.top + window.scrollY - modalRect.height - 12; // 12px gap
+                                if (desiredTop > 8) {
+                                    modal.style.top = desiredTop + 'px';
+                                    modal.style.bottom = 'auto';
+                                    modal.style.transform = 'translateX(-50%)';
+                                } else {
+                                    // If not enough space above, keep modal at top margin
+                                    modal.style.top = '8px';
+                                    modal.style.bottom = 'auto';
+                                    modal.style.transform = 'translateX(-50%)';
+                                }
+                            } else {
+                                // Ensure modal stays at bottom if no overlap
+                                modal.style.bottom = '20px';
+                                modal.style.top = 'auto';
+                                modal.style.transform = 'translateX(-50%)';
+                            }
+                        }, 40);
+                    }
+                }
+            }
+        } else {
+            removeHighlight();
+            if (modal) {
+                modal.style.bottom = '20px';
+                modal.style.top = 'auto';
+                modal.style.transform = 'translateX(-50%)';
+            }
+        }
+    }
+
+    function showAppIntro() {
+        const introOverlay = document.getElementById('introOverlay');
+        introOverlay.classList.add('active');
+    }
+
+    function hideAppIntro() {
+        const introOverlay = document.getElementById('introOverlay');
+        introOverlay.classList.remove('active');
+        removeHighlight();
+        localStorage.setItem(getIntroShownKey(), 'true');
+    }
+
+    function checkAndShowIntro() {
+        // Check if this user has already seen the intro
+        const introShown = localStorage.getItem(getIntroShownKey()) === 'true';
+        
+        // Show intro once per user account
+        if (!introShown) {
+            currentIntroStep = 0;
+            createIntroContent();
+            createIntroDots();
+            showAppIntro();
+        }
+    }
+
+    // Set up intro event listeners
+    const skipIntroBtn = document.getElementById('skipIntroBtn');
+    const introSkipBtn = document.getElementById('introSkipBtn');
+    const introNextBtn = document.getElementById('introNextBtn');
+    
+    if (skipIntroBtn) {
+        skipIntroBtn.addEventListener('click', hideAppIntro);
+    } else console.warn('skipIntroBtn not found');
+
+    if (introSkipBtn) {
+        introSkipBtn.addEventListener('click', hideAppIntro);
+    } else console.warn('introSkipBtn not found');
+
+    if (introNextBtn) {
+        introNextBtn.addEventListener('click', () => {
+            if (currentIntroStep < introSteps.length - 1) {
+                goToIntroStep(currentIntroStep + 1);
+            } else {
+                hideAppIntro();
+            }
+        });
+    } else console.warn('introNextBtn not found');
+
+    // Allow reopening the tutorial from the profile menu
+    const showTutorialBtn = document.getElementById('showTutorialButton');
+    if (showTutorialBtn) {
+        showTutorialBtn.addEventListener('click', () => {
+            // clear the stored "seen" flag for this user and show the intro
+            localStorage.removeItem(getIntroShownKey());
+            currentIntroStep = 0;
+            createIntroContent();
+            createIntroDots();
+            goToIntroStep(0);
+            showAppIntro();
+            // close profile menu if open
+            const profileMenu = document.getElementById('profileMenu');
+            if (profileMenu) profileMenu.style.display = 'none';
+        });
+    }
+
+    // Translate on initial load
+    translatePage();
+    updateGreeting();
+    
+    // Check and show intro for new users
+    setTimeout(() => {
+        checkAndShowIntro();
+    }, 500);
+
+    // Load exchange rates initially and migrate legacy product prices if needed
+    (async () => {
+        await loadExchangeRates();
+        // Migrate any legacy product prices stored in `_legacyPrice`
+        const products = getUserProducts();
+        let changed = false;
+        const curr = getCurrency();
+        products.forEach(p => {
+            if (p && p._legacyPrice != null && p.priceUSD == null) {
+                const v = Number(p._legacyPrice) || 0;
+                p.priceUSD = convertAmount(v, curr, 'USD');
+                delete p._legacyPrice;
+                changed = true;
+            }
+        });
+        if (changed) saveUserProducts(products);
+    })();
+});
+</script>
+
+<!-- GPS Tracking Module -->
+<script src="gps-module.js"></script>
+<script>
+// GPS Tracker instance
+let gpsTracker = null;
+
+// Initialize GPS Tracker when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        initializeGPSTracking();
+        setupGPSEventListeners();
+    }, 1000); // Give other components time to initialize
+});
+
+function initializeGPSTracking() {
+    if (!navigator.geolocation) {
+        console.warn('Geolocation not supported');
+        document.getElementById('toggleGpsBtn').disabled = true;
+        const lang = getCurrentLanguage();
+        const t = translations[lang] || translations.en;
+        alert(t.gpsModuleNotInitialized || 'GPS module not initialized');
+        return;
+    }
+
+    // Initialize GPS Tracker with OpenStreetMap (no API key needed!)
+    gpsTracker = new GPSTracker({
+        proximityRadius: 500 // 500 meters as per user requirements
+    });
+}
+
+function setupGPSEventListeners() {
+    const toggleGpsBtn = document.getElementById('toggleGpsBtn');
+    const closeGpsBtn = document.getElementById('closeGpsBtn');
+    const gpsSection = document.getElementById('gpsSection');
+    const gpsStatus = document.getElementById('gpsStatus');
+
+    // Toggle GPS view
+    toggleGpsBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        
+        if (!gpsTracker) {
+            alert('GPS module not initialized');
+            return;
+        }
+
+        if (gpsSection.style.display === 'none') {
+            // Show GPS section
+            gpsSection.style.display = 'flex';
+            toggleGpsBtn.classList.add('active');
+            
+            try {
+                // Initialize GPS map and start tracking
+                const success = await gpsTracker.init('gpsMap');
+                if (success) {
+                    gpsStatus.innerHTML = '✓ GPS Tracking Active';
+                    gpsStatus.style.color = '#10b981';
+                    startGPSStatusUpdates();
+                } else {
+                    gpsStatus.innerHTML = '⚠ Unable to access GPS';
+                    gpsStatus.style.color = '#ef4444';
+                }
+            } catch (error) {
+                console.error('GPS init error:', error);
+                gpsStatus.innerHTML = '⚠ GPS Error: ' + error.message;
+                gpsStatus.style.color = '#ef4444';
+            }
+        } else {
+            // Hide GPS section
+            gpsSection.style.display = 'none';
+            toggleGpsBtn.classList.remove('active');
+            if (gpsTracker) {
+                gpsTracker.stopTracking();
+            }
+        }
+    });
+
+    // Close GPS section
+    closeGpsBtn.addEventListener('click', () => {
+        gpsSection.style.display = 'none';
+        toggleGpsBtn.classList.remove('active');
+        if (gpsTracker) {
+            gpsTracker.stopTracking();
+        }
+    });
+
+    // Listen for proximity alerts
+    document.addEventListener('storeProximityAlert', (e) => {
+        const store = e.detail.store;
+        console.log('You are near:', store.name);
+        // Optionally auto-show GPS when proximity is detected
+        if (gpsSection.style.display === 'none') {
+            toggleGpsBtn.click();
+        }
+    });
+
+    // Listen for auto-start delivery on proximity
+    document.addEventListener('autoStartDelivery', (e) => {
+        const store = e.detail.store;
+        // You can add custom behavior here
+        // For now, the popup notification is shown by the GPS module
+    });
+}
+
+function startGPSStatusUpdates() {
+    const gpsStatus = document.getElementById('gpsStatus');
+    if (!gpsTracker) return;
+
+    const updateStatus = () => {
+        const status = gpsTracker.getStatus();
+        if (status.isTracking && status.currentPosition) {
+            const lat = status.currentPosition.lat.toFixed(4);
+            const lng = status.currentPosition.lng.toFixed(4);
+            gpsStatus.innerHTML = `✓ GPS Active<br><small>${lat}, ${lng}</small>`;
+            gpsStatus.style.color = '#10b981';
+            gpsStatus.style.fontSize = '12px';
+        }
+    };
+
+    // Update every 5 seconds
+    setInterval(updateStatus, 5000);
+    updateStatus(); // Initial update
+}
+</script>
+
+

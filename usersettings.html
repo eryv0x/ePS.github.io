@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - ePS</title>
+    <script src="language.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        body.dark {
+            background: #000;
+            color: #fff;
+        }
+
+        .phone {
+            width: min(100vw, 430px);
+            aspect-ratio: 9 / 16;
+            background: #fff;
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.dark .phone {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        @media (min-width: 768px) {
+            body { background: #e8e8e8; }
+            body.dark { background: #000; }
+            .phone {
+                width: 430px;
+                max-width: 100vw;
+                height: 100vh;
+                max-height: 100vh;
+                aspect-ratio: auto;
+                border-radius: 0;
+                box-shadow: none;
+            }
+        }
+
+        .header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        body.dark .header {
+            border-bottom-color: #333;
+        }
+
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            flex-shrink: 0;
+        }
+
+        body.dark .back-btn {
+            background: #333;
+            color: #fff;
+        }
+
+        .back-btn:hover {
+            background: #e0e0e0;
+        }
+
+        body.dark .back-btn:hover {
+            background: #444;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        body.dark .header-title {
+            color: #fff;
+        }
+
+        .settings-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .settings-section {
+            margin-bottom: 32px;
+        }
+
+        .settings-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        body.dark .settings-section-title {
+            color: #aaa;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        body.dark .setting-item {
+            border-bottom-color: #333;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-item:hover {
+            background: #f9f9f9;
+        }
+
+        body.dark .setting-item:hover {
+            background: #222;
+        }
+
+        .setting-label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .setting-label .label {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        body.dark .setting-label .label {
+            color: #fff;
+        }
+
+        .setting-label .description {
+            font-size: 13px;
+            color: #777;
+        }
+
+        body.dark .setting-label .description {
+            color: #aaa;
+        }
+
+        .setting-value {
+            font-size: 15px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        body.dark .setting-value {
+            color: #aaa;
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch.active {
+            background: #2563eb;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(20px);
+        }
+
+        .select-wrapper {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .select-wrapper select {
+            appearance: none;
+            -webkit-appearance: none;
+            background: #fff;
+            border: 1px solid #e6e8ef;
+            border-radius: 10px;
+            font-size: 15px;
+            color: #111;
+            font-weight: 600;
+            padding: 8px 28px 8px 40px; /* space for flag emoji */
+            cursor: pointer;
+            outline: none;
+            min-width: 140px;
+            height: 38px;
+            box-shadow: 0 4px 12px rgba(16,24,40,0.06);
+        }
+
+        .select-wrapper::after {
+            content: '▾';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #8b95a7;
+            pointer-events: none;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .radio-option label {
+            font-size: 15px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        body.dark .radio-option label {
+            color: #fff;
+        }
+
+        .days-grid {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .day-chip {
+            padding: 6px 12px;
+            border-radius: 18px;
+            background: #f1f5f9;
+            border: none;
+            cursor: pointer;
+            color: #111;
+            font-weight: 600;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+        }
+
+        .day-chip::after {
+            content: '';
+            display: inline-block;
+            width: 0;
+            opacity: 0;
+            transition: width 0.12s, opacity 0.12s, margin-left 0.12s;
+        }
+
+        body.dark .day-chip {
+            background: #222;
+            color: #fff;
+        }
+
+        .day-chip.selected {
+            background: var(--nonwork-color, #ff4d4f);
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+            transform: translateY(-1px);
+        }
+
+        .day-chip.selected::after {
+            content: '✓';
+            margin-left: 8px;
+            font-size: 12px;
+            line-height: 1;
+            opacity: 1;
+            color: rgba(255,255,255,0.95);
+            background: rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 2px 6px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="phone">
+    <div class="header">
+        <button type="button" class="back-btn" id="backBtn">←</button>
+        <div class="header-title" data-i18n="settings">Settings</div>
+    </div>
+
+    <div class="settings-content">
+        <div class="settings-section">
+            <div class="settings-section-title" data-i18n="appearance">Appearance</div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span class="label" data-i18n="darkMode">Dark mode</span>
+                    <span class="description" data-i18n="darkModeDesc">Switch between light and dark theme</span>
+                </div>
+                <div class="toggle-switch" id="darkModeToggle"></div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-section-title" data-i18n="language">Language</div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span class="label" data-i18n="language">Language</span>
+                    <span class="description" data-i18n="languageDesc">Choose your preferred language</span>
+                </div>
+                <div class="select-wrapper">
+                    <select id="languageSelect">
+                        <option value="en">🇬🇧 English</option>
+                        <option value="bg">🇧🇬 Български</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span class="label" data-i18n="currency">Currency</span>
+                    <span class="description" data-i18n="currencyDesc">Choose currency for prices</span>
+                </div>
+                <div class="select-wrapper">
+                    <select id="currencySelect">
+                        <option value="EUR" data-i18n="currency_EUR">🇪🇺 EUR</option>
+                        <option value="USD" data-i18n="currency_USD">🇺🇸 USD</option>
+                        <option value="BGN" data-i18n="currency_BGN">🇧🇬 BGN</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-section-title" data-i18n="units">Units</div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span class="label" data-i18n="distanceUnit">Distance unit</span>
+                    <span class="description" data-i18n="distanceUnitDesc">Show distances in kilometers or miles</span>
+                </div>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="unitKm" name="distanceUnit" value="km">
+                        <label for="unitKm" data-i18n="km">km</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="unitMiles" name="distanceUnit" value="miles">
+                        <label for="unitMiles" data-i18n="miles">miles</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-section-title" data-i18n="calendar">Calendar</div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span class="label" data-i18n="weekStart">Week start</span>
+                    <span class="description" data-i18n="weekStartDesc">Choose the first day of week</span>
+                </div>
+                <div class="select-wrapper">
+                    <select id="calendarStartSelect">
+                        <option value="sun" data-i18n="sunday">Sunday</option>
+                        <option value="mon" data-i18n="monday">Monday</option>
+                        <option value="sat" data-i18n="saturday">Saturday</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span class="label" data-i18n="nonWorkingDays">Non-working days</span>
+                    <span class="description" data-i18n="nonWorkingDaysDesc">Mark days as non-working</span>
+                </div>
+                <div class="days-grid" aria-label="Non-working days">
+                    <button type="button" class="day-chip" data-day="0" data-i18n="dayShortSun">Sun</button>
+                    <button type="button" class="day-chip" data-day="1" data-i18n="dayShortMon">Mon</button>
+                    <button type="button" class="day-chip" data-day="2" data-i18n="dayShortTue">Tue</button>
+                    <button type="button" class="day-chip" data-day="3" data-i18n="dayShortWed">Wed</button>
+                    <button type="button" class="day-chip" data-day="4" data-i18n="dayShortThu">Thu</button>
+                    <button type="button" class="day-chip" data-day="5" data-i18n="dayShortFri">Fri</button>
+                    <button type="button" class="day-chip" data-day="6" data-i18n="dayShortSat">Sat</button>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span class="label" data-i18n="nonWorkingColor">Non-working color</span>
+                    <span class="description" data-i18n="nonWorkingColorDesc">Color for non-working days</span>
+                </div>
+                <div class="setting-value">
+                    <input type="color" id="nonWorkColorInput" value="#ff4d4f">
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-section-title" data-i18n="notifications">Notifications</div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span class="label" data-i18n="pushNotifications">Push notifications</span>
+                    <span class="description" data-i18n="pushNotificationsDesc">Receive notifications about deliveries</span>
+                </div>
+                <div class="toggle-switch" id="pushNotificationsToggle"></div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span class="label" data-i18n="emailNotifications">Email notifications</span>
+                    <span class="description" data-i18n="emailNotificationsDesc">Get updates via email</span>
+                </div>
+                <div class="toggle-switch" id="emailNotificationsToggle"></div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-section-title" data-i18n="privacy">Privacy</div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span class="label" data-i18n="locationServices">Location services</span>
+                    <span class="description" data-i18n="locationServicesDesc">Allow app to access your location</span>
+                </div>
+                <div class="toggle-switch" id="locationServicesToggle"></div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span class="label" data-i18n="shareAnalytics">Share analytics</span>
+                    <span class="description" data-i18n="shareAnalyticsDesc">Help improve the app by sharing usage data</span>
+                </div>
+                <div class="toggle-switch" id="analyticsToggle"></div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-section-title" data-i18n="account">Account</div>
+            
+            <div class="setting-item" id="changePictureItem">
+                <div class="setting-label">
+                    <span class="label" data-i18n="changeProfilePicture">Change profile picture</span>
+                    <span class="description" data-i18n="changeProfilePictureDesc">Update your avatar</span>
+                </div>
+                <div class="setting-value">→</div>
+            </div>
+
+            <div class="setting-item" id="signOutItem">
+                <div class="setting-label">
+                    <span class="label" data-i18n="signOut">Sign out</span>
+                    <span class="description" data-i18n="signOutDesc">Sign out of your account</span>
+                </div>
+                <div class="setting-value">→</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="file" id="avatarFileInput" accept="image/*" style="display:none" />
+
+<script>
+// Translations
+const translations = {
+    en: {
+        settings: 'Settings',
+        appearance: 'Appearance',
+        darkMode: 'Dark mode',
+        darkModeDesc: 'Switch between light and dark theme',
+        language: 'Language',
+        languageDesc: 'Choose your preferred language',
+        units: 'Units',
+        distanceUnit: 'Distance unit',
+        distanceUnitDesc: 'Show distances in kilometers or miles',
+        km: 'km',
+        miles: 'miles',
+        notifications: 'Notifications',
+        pushNotifications: 'Push notifications',
+        pushNotificationsDesc: 'Receive notifications about deliveries',
+        emailNotifications: 'Email notifications',
+        emailNotificationsDesc: 'Get updates via email',
+        privacy: 'Privacy',
+        locationServices: 'Location services',
+        locationServicesDesc: 'Allow app to access your location',
+        shareAnalytics: 'Share analytics',
+        shareAnalyticsDesc: 'Help improve the app by sharing usage data',
+        account: 'Account',
+        changeProfilePicture: 'Change profile picture',
+        changeProfilePictureDesc: 'Update your avatar',
+        signOut: 'Sign out',
+        signOutDesc: 'Sign out of your account',
+        profilePictureUpdated: 'Profile picture updated!',
+        confirmSignOut: 'Are you sure you want to sign out?',
+
+        // Calendar & non-working days
+        calendar: 'Calendar',
+        weekStart: 'Week start',
+        weekStartDesc: 'Choose the first day of the week',
+        sunday: 'Sunday',
+        monday: 'Monday',
+        saturday: 'Saturday',
+        nonWorkingDays: 'Non-working days',
+        nonWorkingDaysDesc: 'Mark days as non-working',
+        nonWorkingColor: 'Non-working color',
+        nonWorkingColorDesc: 'Color for non-working days',
+        dayShortSun: 'Sun',
+        dayShortMon: 'Mon',
+        dayShortTue: 'Tue',
+        dayShortWed: 'Wed',
+        dayShortThu: 'Thu',
+        dayShortFri: 'Fri',
+        dayShortSat: 'Sat',
+
+        // Currency
+        currency: 'Currency',
+        currencyDesc: 'Choose currency for prices',
+        currency_EUR: '🇪🇺 EUR',
+        currency_USD: '🇺🇸 USD',
+        currency_BGN: '🇧🇬 BGN'
+    },
+    bg: {
+        settings: 'Настройки',
+        appearance: 'Външен вид',
+        darkMode: 'Тъмен режим',
+        darkModeDesc: 'Превключване между светъл и тъмен режим',
+        language: 'Език',
+        languageDesc: 'Изберете предпочитания език',
+        units: 'Мерни единици',
+        distanceUnit: 'Единица за разстояние',
+        distanceUnitDesc: 'Показване на разстояния в километри или мили',
+        km: 'км',
+        miles: 'мили',
+        notifications: 'Известия',
+        pushNotifications: 'Push известия',
+        pushNotificationsDesc: 'Получавайте известия за доставки',
+        emailNotifications: 'Имейл известия',
+        emailNotificationsDesc: 'Получавайте актуализации по имейл',
+        privacy: 'Поверителност',
+        locationServices: 'Услуги за местоположение',
+        locationServicesDesc: 'Позволяване на приложението да достъпва вашето местоположение',
+        shareAnalytics: 'Споделяне на анализи',
+        shareAnalyticsDesc: 'Помогнете за подобряване на приложението чрез споделяне на данни за използване',
+        account: 'Профил',
+        changeProfilePicture: 'Промяна на снимката на профила',
+        changeProfilePictureDesc: 'Актуализиране на вашия аватар',
+        signOut: 'Изход',
+        signOutDesc: 'Излезте от профила си',
+        profilePictureUpdated: 'Снимката на профила е актуализирана!',
+        confirmSignOut: 'Сигурни ли сте, че искате да излезете?',
+
+        // Calendar & non-working days
+        calendar: 'Календар',
+        weekStart: 'Начален ден на седмицата',
+        weekStartDesc: 'Изберете първия ден от седмицата',
+        sunday: 'Неделя',
+        monday: 'Понеделник',
+        saturday: 'Събота',
+        nonWorkingDays: 'Неработни дни',
+        nonWorkingDaysDesc: 'Отбележете дните като неработни',
+        nonWorkingColor: 'Цвят за неработни дни',
+        nonWorkingColorDesc: 'Цвят за неработни дни',
+        dayShortSun: 'Нед',
+        dayShortMon: 'Пон',
+        dayShortTue: 'Вто',
+        dayShortWed: 'Ср',
+        dayShortThu: 'Чет',
+        dayShortFri: 'Пет',
+        dayShortSat: 'Съб',
+
+        // Currency
+        currency: 'Валута',
+        currencyDesc: 'Изберете валута за цените',
+        currency_EUR: '🇪🇺 EUR',
+        currency_USD: '🇺🇸 USD',
+        currency_BGN: '🇧🇬 BGN'
+    }
+};
+
+function getCurrentLanguage() {
+    return localStorage.getItem('eps_language') || 'en';
+}
+
+function translatePage() {
+    const lang = getCurrentLanguage();
+    const t = translations[lang] || translations.en;
+    
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) {
+            el.textContent = t[key];
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const backBtn = document.getElementById('backBtn');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const languageSelect = document.getElementById('languageSelect');
+    const currencySelect = document.getElementById('currencySelect');
+    const calendarStartSelect = document.getElementById('calendarStartSelect');
+    const dayChips = Array.from(document.querySelectorAll('.day-chip'));
+    const nonWorkColorInput = document.getElementById('nonWorkColorInput');
+    const unitKm = document.getElementById('unitKm');
+    const unitMiles = document.getElementById('unitMiles');
+    const pushNotificationsToggle = document.getElementById('pushNotificationsToggle');
+    const emailNotificationsToggle = document.getElementById('emailNotificationsToggle');
+    const locationServicesToggle = document.getElementById('locationServicesToggle');
+    const analyticsToggle = document.getElementById('analyticsToggle');
+    const avatarFileInput = document.getElementById('avatarFileInput');
+
+    // Load saved settings
+    if (!localStorage.getItem('eps_theme')) {
+        localStorage.setItem('eps_theme', 'dark');
+    }
+    const theme = localStorage.getItem('eps_theme') || 'dark';
+    const language = getCurrentLanguage();
+    const distanceUnit = localStorage.getItem('eps_distance_unit') || 'km';
+    const currency = localStorage.getItem('eps_currency') || 'EUR';
+    const calendarStart = localStorage.getItem('eps_calendar_start') || 'mon';
+    const nonWorkDays = JSON.parse(localStorage.getItem('eps_calendar_nonwork') || '[]');
+    const nonWorkColor = localStorage.getItem('eps_calendar_nonwork_color') || '#ff4d4f';
+    const pushNotifications = localStorage.getItem('eps_push_notifications') === 'true';
+    const emailNotifications = localStorage.getItem('eps_email_notifications') === 'true';
+    const locationServices = localStorage.getItem('eps_location_services') !== 'false';
+    const analytics = localStorage.getItem('eps_analytics') !== 'false';
+
+    // Apply theme
+    if (theme === 'dark') {
+        document.body.classList.add('dark');
+        darkModeToggle.classList.add('active');
+    }
+
+    // Apply language
+    languageSelect.value = language;
+    // Apply currency
+    if (currencySelect) currencySelect.value = currency;
+    // Apply calendar settings
+    if (calendarStartSelect) calendarStartSelect.value = calendarStart;
+    // Initialize day chips selection and color
+    document.documentElement.style.setProperty('--nonwork-color', nonWorkColor);
+    dayChips.forEach(chip => {
+        const dayNum = Number(chip.getAttribute('data-day'));
+        const isSelected = nonWorkDays.indexOf(dayNum) !== -1;
+        if (isSelected) chip.classList.add('selected');
+        chip.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+    });
+    if (nonWorkColorInput) nonWorkColorInput.value = nonWorkColor;
+
+    // Apply distance unit
+    if (distanceUnit === 'miles') {
+        unitMiles.checked = true;
+    } else {
+        unitKm.checked = true;
+    }
+
+    // Apply notification settings
+    if (pushNotifications) pushNotificationsToggle.classList.add('active');
+    if (emailNotifications) emailNotificationsToggle.classList.add('active');
+    if (locationServices) locationServicesToggle.classList.add('active');
+    if (analytics) analyticsToggle.classList.add('active');
+
+    // Back button
+    backBtn.addEventListener('click', () => {
+        window.location.href = 'index.html';
+    });
+
+    // Dark mode toggle
+    darkModeToggle.addEventListener('click', () => {
+        const isActive = darkModeToggle.classList.contains('active');
+        if (isActive) {
+            darkModeToggle.classList.remove('active');
+            document.body.classList.remove('dark');
+            localStorage.setItem('eps_theme', 'light');
+        } else {
+            darkModeToggle.classList.add('active');
+            document.body.classList.add('dark');
+            localStorage.setItem('eps_theme', 'dark');
+        }
+    });
+
+    // Language select
+    languageSelect.addEventListener('change', (e) => {
+        if (window.i18n) {
+            i18n.setLanguage(e.target.value);
+        } else {
+            localStorage.setItem('eps_language', e.target.value);
+            translatePage();
+            window.dispatchEvent(new Event('storage'));
+        }
+    });
+
+    // Currency select
+    if (currencySelect) {
+        currencySelect.addEventListener('change', (e) => {
+            localStorage.setItem('eps_currency', e.target.value);
+            window.dispatchEvent(new Event('storage'));
+        });
+    }
+
+    // Calendar settings
+    if (calendarStartSelect) {
+        calendarStartSelect.addEventListener('change', (e) => {
+            localStorage.setItem('eps_calendar_start', e.target.value);
+            window.dispatchEvent(new Event('storage'));
+        });
+    }
+
+    dayChips.forEach(chip => chip.addEventListener('click', () => {
+        const nowSelected = chip.classList.toggle('selected');
+        chip.setAttribute('aria-pressed', chip.classList.contains('selected') ? 'true' : 'false');
+        const selected = dayChips.filter(c => c.classList.contains('selected')).map(c => Number(c.getAttribute('data-day')));
+        localStorage.setItem('eps_calendar_nonwork', JSON.stringify(selected));
+        window.dispatchEvent(new Event('storage'));
+    }));
+
+    if (nonWorkColorInput) {
+        nonWorkColorInput.addEventListener('input', (e) => {
+            localStorage.setItem('eps_calendar_nonwork_color', e.target.value);
+            document.documentElement.style.setProperty('--nonwork-color', e.target.value);
+            window.dispatchEvent(new Event('storage'));
+        });
+    }
+
+    // Initial translation
+    translatePage();
+
+    // Distance unit
+    unitKm.addEventListener('change', () => {
+        if (unitKm.checked) {
+            localStorage.setItem('eps_distance_unit', 'km');
+        }
+    });
+
+    unitMiles.addEventListener('change', () => {
+        if (unitMiles.checked) {
+            localStorage.setItem('eps_distance_unit', 'miles');
+        }
+    });
+
+    // Push notifications toggle
+    pushNotificationsToggle.addEventListener('click', () => {
+        const isActive = pushNotificationsToggle.classList.contains('active');
+        if (isActive) {
+            pushNotificationsToggle.classList.remove('active');
+            localStorage.setItem('eps_push_notifications', 'false');
+        } else {
+            pushNotificationsToggle.classList.add('active');
+            localStorage.setItem('eps_push_notifications', 'true');
+        }
+    });
+
+    // Email notifications toggle
+    emailNotificationsToggle.addEventListener('click', () => {
+        const isActive = emailNotificationsToggle.classList.contains('active');
+        if (isActive) {
+            emailNotificationsToggle.classList.remove('active');
+            localStorage.setItem('eps_email_notifications', 'false');
+        } else {
+            emailNotificationsToggle.classList.add('active');
+            localStorage.setItem('eps_email_notifications', 'true');
+        }
+    });
+
+    // Location services toggle
+    locationServicesToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isActive = locationServicesToggle.classList.contains('active');
+        if (isActive) {
+            locationServicesToggle.classList.remove('active');
+            localStorage.setItem('eps_location_services', 'false');
+        } else {
+            locationServicesToggle.classList.add('active');
+            localStorage.setItem('eps_location_services', 'true');
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        localStorage.setItem('eps_user_lat', String(pos.coords.latitude));
+                        localStorage.setItem('eps_user_lng', String(pos.coords.longitude));
+                    },
+                    () => {},
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            }
+        }
+    });
+
+    // Analytics toggle
+    analyticsToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isActive = analyticsToggle.classList.contains('active');
+        if (isActive) {
+            analyticsToggle.classList.remove('active');
+            localStorage.setItem('eps_analytics', 'false');
+        } else {
+            analyticsToggle.classList.add('active');
+            localStorage.setItem('eps_analytics', 'true');
+        }
+    });
+
+    // Change profile picture
+    const changePictureItem = document.getElementById('changePictureItem');
+    changePictureItem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        avatarFileInput.click();
+    });
+
+    avatarFileInput.addEventListener('change', () => {
+        const file = avatarFileInput.files && avatarFileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const dataUrl = reader.result;
+            if (typeof dataUrl === 'string') {
+                localStorage.setItem('eps_user_avatar', dataUrl);
+                const t = translations[getCurrentLanguage()] || translations.en;
+                alert(t.profilePictureUpdated);
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Sign out
+    const signOutItem = document.getElementById('signOutItem');
+    signOutItem.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const t = translations[getCurrentLanguage()] || translations.en;
+        if (confirm(t.confirmSignOut)) {
+            try {
+                await fetch('https://fra.cloud.appwrite.io/v1/account/sessions/current', {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Appwrite-Project': '6994aeb1000ab573753f'
+                    },
+                    credentials: 'include'
+                });
+            } catch (err) {
+                // ignore errors
+            }
+
+            localStorage.removeItem('eps_user_name');
+            localStorage.removeItem('eps_user_org');
+            localStorage.removeItem('eps_theme');
+            window.location.href = 'login.html';
+        }
+    });
+
+    // Watch for theme changes from other pages
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'eps_theme') {
+            if (e.newValue === 'dark') {
+                document.body.classList.add('dark');
+                darkModeToggle.classList.add('active');
+            } else {
+                document.body.classList.remove('dark');
+                darkModeToggle.classList.remove('active');
+            }
+        }
+    });
+});
+</script>
+
+</body>
+</html>
