@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (userId && userName) {
         // Already logged in, redirect to index
-        window.location.href = 'index.html';
+        window.location.href = 'https://eryv0x.github.io/ePS.github.io/index.html';
         return;
     }
     
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Save user info and redirect to onboarding
             localStorage.setItem('eps_user_email', email);
             localStorage.setItem('eps_user_id', 'user_' + Date.now());
-            window.location.href = 'onboarding.html';
+            window.location.href = 'https://eryv0x.github.io/ePS.github.io/onboarding.html';
         });
     }
 
@@ -140,8 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (googleLogin) {
         googleLogin.addEventListener('click', () => {
             // Start Google OAuth via Appwrite
-            const successUrl = encodeURIComponent('http://localhost:3000/onboarding.html');
-            const failureUrl = encodeURIComponent('http://localhost:3000/login.html');
+            const successUrl = encodeURIComponent('https://eryv0x.github.io/ePS.github.io/onboarding.html');
+            const failureUrl = encodeURIComponent('https://eryv0x.github.io/ePS.github.io/login.html');
             window.location.href =
                 'https://fra.cloud.appwrite.io/v1/account/sessions/oauth2/google' +
                 '?project=6994aeb1000ab573753f' +
