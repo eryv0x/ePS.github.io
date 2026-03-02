@@ -823,9 +823,12 @@ function generateTextReport() {
 }
 
 function generateExcelReport() {
+    console.log('Generate Excel Report called');
     try {
         // Determine report date (fallback to popup title if window.reportDate missing)
         let reportDate = window.reportDate;
+        console.log('Initial reportDate:', reportDate);
+        
         if (!reportDate) {
             const rdEl = document.getElementById('reportDate');
             if (rdEl) {
@@ -833,7 +836,10 @@ function generateExcelReport() {
                 if (!isNaN(parsed)) reportDate = parsed;
             }
         }
+        console.log('Final reportDate:', reportDate);
+        
         if (!reportDate) {
+            console.log('No report date, showing error');
             const lang = getCurrentLanguage();
             const t = translations[lang] || translations.en;
             const n = document.createElement('div');
@@ -846,6 +852,21 @@ function generateExcelReport() {
 
         const dateKey = getDateKey(reportDate instanceof Date ? reportDate : new Date(reportDate));
         const dayDeliveries = deliveries[dateKey] || [];
+        console.log('Date Key:', dateKey);
+        console.log('Day Deliveries:', dayDeliveries);
+
+        // Check if there are any deliveries
+        if (!dayDeliveries || dayDeliveries.length === 0) {
+            console.log('No deliveries for this date');
+            const lang = getCurrentLanguage();
+            const t = translations[lang] || translations.en;
+            const n = document.createElement('div');
+            n.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;color:#fff;padding:14px 18px;border-radius:10px;z-index:1001`; 
+            n.textContent = t.noDeliveries || 'No deliveries on this day';
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 1800);
+            return;
+        }
 
         // Combine duplicate store+product deliveries
         const combinedDeliveries = {};
@@ -888,6 +909,8 @@ function generateExcelReport() {
         rows.push(['', '', '', '', `${t.sum || 'Sum'}: ${grandTotalStr} ${displayCurrency}`].join(sep));
 
         const csvContent = '\uFEFF' + rows.join(eol);
+        console.log('CSV Content:', csvContent);
+        
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -895,14 +918,18 @@ function generateExcelReport() {
         link.download = `report-${dateKey}.csv`;
         link.style.display = 'none';
         document.body.appendChild(link);
+        console.log('Link created and appended:', link);
         
         // Trigger the download with a small delay to ensure proper processing
         setTimeout(() => {
+            console.log('Clicking link');
             link.click();
             // Clean up after a delay to ensure the download starts
             setTimeout(() => {
+                console.log('Cleaning up');
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
+                console.log('Cleanup complete');
             }, 100);
         }, 50);
 
@@ -925,11 +952,13 @@ function generateExcelReport() {
         `;
         const lang2 = getCurrentLanguage();
         const t2 = translations[lang2] || translations.en;
-        notification.textContent = t2.reportDownloaded;
+        notification.textContent = t2.reportDownloaded || '✓ Report downloaded!';
         document.body.appendChild(notification);
         setTimeout(() => notification.remove(), 2000);
+        console.log('Success notification shown');
     } catch (err) {
-        console.error('generateExcelReport error', err);
+        console.error('generateExcelReport error:', err);
+        console.error('Stack:', err.stack);
         const lang = getCurrentLanguage();
         const t = translations[lang] || translations.en;
         const n = document.createElement('div');
