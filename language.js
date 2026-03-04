@@ -150,6 +150,7 @@
             productUpdatedSuccess: 'Product updated successfully!',
             reportCopied: '✓ Report copied to clipboard!',
             reportDownloaded: '✓ Report downloaded!',
+            reportDownloadError: 'Failed to generate report',
             enter0ToClose: 'Enter 0 to close',
             gpsModuleNotInitialized: 'GPS module not initialized'
         },
@@ -303,6 +304,7 @@
             productUpdatedSuccess: 'Продуктът е актуализиран успешно!',
             reportCopied: '✓ Докладът е копиран в клипборда!',
             reportDownloaded: '✓ Докладът е изтеглен!',
+            reportDownloadError: 'Не може да се генерира доклад',
             enter0ToClose: 'Въведете 0 за да затворите',
             gpsModuleNotInitialized: 'GPS модулът не е инициализиран'
         }
