@@ -408,7 +408,7 @@ let currentMonth = new Date();
 const deliveries = {};
 
 // Translation support - GLOBAL so all functions can access it
-const translations = {
+const translations = (window.i18n && window.i18n.translations) || {
     en: {
         pleaseFillAllFields: 'Please fill in all fields',
         storeSavedSuccess: 'Store saved successfully!',
@@ -424,6 +424,20 @@ const translations = {
         total: 'Total',
         sum: 'Sum',
         noDeliveries: 'No deliveries on this day',
+        deliverySuccess: 'Delivered',
+        next: 'Next',
+        skip: 'Skip',
+        getStarted: 'Get Started',
+        introStep1Title: 'Welcome to ePS',
+        introStep1Desc: 'Track your product deliveries efficiently with our app. Let\'s get you set up!',
+        introStep2Title: 'Set Up Your Stores',
+        introStep2Desc: 'Add the stores you distribute to. Click the Stores card to create your first store.',
+        introStep3Title: 'Add Your Products',
+        introStep3Desc: 'Create a list of products you deliver. Click the Products card to add them.',
+        introStep4Title: 'Make a Delivery',
+        introStep4Desc: 'Use the "Make a delivery" button to record each delivery with store and product info.',
+        introStep5Title: 'View Reports',
+        introStep5Desc: 'Click on any calendar day to view deliveries and export reports as text or Excel.'
     },
     bg: {
         pleaseFillAllFields: 'Моля, попълнете всички полета',
@@ -440,6 +454,20 @@ const translations = {
         total: 'Общо',
         sum: 'Сума',
         noDeliveries: 'Няма доставки този ден',
+        deliverySuccess: 'Доставено',
+        next: 'Напред',
+        skip: 'Пропусни',
+        getStarted: 'Да започваме',
+        introStep1Title: 'Добре дошли в ePS',
+        introStep1Desc: 'Проследявайте вашите доставки на продукти ефективно с нашето приложение. Нека да те настроим!',
+        introStep2Title: 'Настрой своите магазини',
+        introStep2Desc: 'Добави магазините, на които разпределяш. Кликни на картата Магазини, за да създадеш първия си магазин.',
+        introStep3Title: 'Добави своите продукти',
+        introStep3Desc: 'Създай списък с продуктите, които доставяш. Кликни на картата Продукти, за да ги добавиш.',
+        introStep4Title: 'Направи доставка',
+        introStep4Desc: 'Използвай бутона "Направи доставка", за да регистрираш всяка доставка с информация за магазина и продукта.',
+        introStep5Title: 'Преглед на доклади',
+        introStep5Desc: 'Кликни на всеки ден в календара, за да видиш доставките и да експортираш доклади като текст или Excel.'
     }
 };
 
@@ -1078,7 +1106,7 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsButton.addEventListener('click', (e) => {
         e.stopPropagation();
         profileMenu.classList.remove('visible');
-        window.location.href = 'https://eryv0x.github.io/ePS.github.io/usersettings.html';
+        window.location.href = './usersettings.html';
     });
 
     const changeAvatarButton = document.getElementById('changeAvatarButton');
@@ -1111,7 +1139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         profileMenu.classList.remove('visible');
         localStorage.removeItem('eps_user_name');
         localStorage.removeItem('eps_user_org');
-        window.location.href = 'https://eryv0x.github.io/ePS.github.io/login.html';
+        window.location.href = './login.html';
     });
 
     // Calendar navigation
@@ -2430,13 +2458,12 @@ document.addEventListener('DOMContentLoaded', () => {
         introContent.innerHTML = '';
         
         introSteps.forEach((step, index) => {
-            const t = translations[getCurrentLanguage()] || translations.en;
             const stepEl = document.createElement('div');
             stepEl.className = 'intro-step' + (index === 0 ? ' active' : '');
             stepEl.innerHTML = `
                 <div class="intro-step-icon">${step.icon}</div>
-                <h2 class="intro-step-title">${t[step.titleKey]}</h2>
-                <p class="intro-step-desc">${t[step.descKey]}</p>
+                <h2 class="intro-step-title">${window.i18n.t(step.titleKey)}</h2>
+                <p class="intro-step-desc">${window.i18n.t(step.descKey)}</p>
             `;
             introContent.appendChild(stepEl);
         });
@@ -2474,12 +2501,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Update next button text
         const nextBtn = document.getElementById('introNextBtn');
-        const t = translations[getCurrentLanguage()] || translations.en;
         
         if (stepIndex === introSteps.length - 1) {
-            nextBtn.textContent = t.getStarted || 'Get Started';
+            nextBtn.textContent = window.i18n.t('getStarted') || 'Get Started';
         } else {
-            nextBtn.textContent = t.next || 'Next';
+            nextBtn.textContent = window.i18n.t('next') || 'Next';
         }
         
         // Show or hide highlight and position the modal so it doesn't cover the highlighted element
