@@ -490,13 +490,11 @@ let exchangeRates = null;
 function getCurrency() {
     return localStorage.getItem('eps_currency') || 'EUR';
 }
-
 function getLocaleForCurrency(currency) {
     if (currency === 'EUR' || currency === 'BGN') return 'bg-BG';
     if (currency === 'USD') return 'en-US';
     return 'en-US';
 }
-
 function convertAmount(amount, from, to) {
     if (from === to) return Number(amount) || 0;
     const rates = exchangeRates || fallbackRates;
@@ -507,6 +505,10 @@ function convertAmount(amount, from, to) {
     const result = (to === 'USD') ? amountUSD : (amountUSD * t);
     return Number(result) || 0;
 }
+// Expose on window so they are always available (e.g. from event handlers)
+window.getCurrency = getCurrency;
+window.getLocaleForCurrency = getLocaleForCurrency;
+window.convertAmount = convertAmount;
 
 // Global helper functions
 function getCurrentLanguage() {
@@ -994,7 +996,7 @@ function generateExcelReport() {
 
         const sep = (lang === 'bg') ? ';' : ',';
         const eol = '\r\n';
-        const displayCurrency = getCurrency();
+        const displayCurrency = window.getCurrency ? window.getCurrency() : (localStorage.getItem('eps_currency') || 'EUR');
         
         let rows = [];
         // Header
@@ -1011,12 +1013,12 @@ function generateExcelReport() {
         deliveryOrder.forEach(key => {
             const delivery = combinedDeliveries[key];
             const priceUSD = delivery.priceUSD ? Number(delivery.priceUSD) : 0;
-            const price = convertAmount(priceUSD, 'USD', displayCurrency);
+            const price = window.convertAmount ? window.convertAmount(priceUSD, 'USD', displayCurrency) : Number(priceUSD) || 0;
             const qty = Number(delivery.quantity) || 0;
             const total = price * qty;
             grandTotal += (priceUSD * qty); // keep track in USD for accuracy
             
-            const locale = getLocaleForCurrency(displayCurrency);
+            const locale = window.getLocaleForCurrency ? window.getLocaleForCurrency(displayCurrency) : 'en-US';
             const priceStr = Number(price).toLocaleString(locale, {minimumFractionDigits:2, maximumFractionDigits:2});
             const totalStr = Number(total).toLocaleString(locale, {minimumFractionDigits:2, maximumFractionDigits:2});
             
@@ -1026,8 +1028,8 @@ function generateExcelReport() {
             rows.push(`"${storeEsc}"${sep}"${productEsc}"${sep}${qty}${sep}${priceStr} ${displayCurrency}${sep}${totalStr} ${displayCurrency}`);
         });
 
-        const grandTotalDisplay = convertAmount(grandTotal, 'USD', displayCurrency);
-        const grandLocale = getLocaleForCurrency(displayCurrency);
+        const grandTotalDisplay = window.convertAmount ? window.convertAmount(grandTotal, 'USD', displayCurrency) : grandTotal;
+        const grandLocale = window.getLocaleForCurrency ? window.getLocaleForCurrency(displayCurrency) : 'en-US';
         const grandTotalStr = Number(grandTotalDisplay).toLocaleString(grandLocale, {minimumFractionDigits:2, maximumFractionDigits:2});
         
         // Empty row
