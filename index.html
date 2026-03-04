@@ -856,6 +856,12 @@ function saveEditDelivery() {
 
 function generateTextReport() {
     if (!window.reportDate) return;
+    const lang = getCurrentLanguage();
+    const t = (window.i18n && window.i18n.t) ? window.i18n.t.bind(window.i18n) : (key) => {
+        const fallback = translations[lang] || translations.en;
+        return fallback[key] || key;
+    };
+
     const dateKey = getDateKey(window.reportDate);
     const dayDeliveries = deliveries[dateKey] || [];
     
@@ -871,7 +877,7 @@ function generateTextReport() {
         combinedDeliveries[key].quantity += delivery.quantity;
     });
     
-    let text = 'Daily Report - ' + window.reportDate.toLocaleDateString() + '\n\n';
+    let text = (lang === 'bg' ? 'Дневен отчет - ' : 'Daily Report - ') + window.reportDate.toLocaleDateString(lang === 'bg' ? 'bg-BG' : 'en-US') + '\n\n';
     deliveryOrder.forEach(key => {
         const delivery = combinedDeliveries[key];
         text += `${delivery.storeName}: ${delivery.productName} - ${delivery.quantity}\n`;
@@ -895,9 +901,7 @@ function generateTextReport() {
             box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
             text-align: center;
         `;
-        const lang = getCurrentLanguage();
-        const t = translations[lang] || translations.en;
-        notification.textContent = t.reportCopied;
+        notification.textContent = t('reportCopied') || '✓ Report copied!';
         document.body.appendChild(notification);
         setTimeout(() => notification.remove(), 2000);
     });
@@ -905,6 +909,12 @@ function generateTextReport() {
 
 function generateExcelReport() {
     console.log('Generate Excel Report called');
+    const lang = getCurrentLanguage();
+    const t = (window.i18n && window.i18n.t) ? window.i18n.t.bind(window.i18n) : (key) => {
+        const fallback = translations[lang] || translations.en;
+        return fallback[key] || key;
+    };
+
     try {
         // Determine report date (fallback to popup title if window.reportDate missing)
         let reportDate = window.reportDate;
@@ -921,11 +931,9 @@ function generateExcelReport() {
         
         if (!reportDate) {
             console.log('No report date, showing error');
-            const lang = getCurrentLanguage();
-            const t = translations[lang] || translations.en;
             const n = document.createElement('div');
             n.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;color:#fff;padding:14px 18px;border-radius:10px;z-index:1001`; 
-            n.textContent = t.noDeliveries || 'No deliveries on this day';
+            n.textContent = t('noDeliveries') || 'No deliveries on this day';
             document.body.appendChild(n);
             setTimeout(() => n.remove(), 1800);
             return;
@@ -939,11 +947,9 @@ function generateExcelReport() {
         // Check if there are any deliveries
         if (!dayDeliveries || dayDeliveries.length === 0) {
             console.log('No deliveries for this date');
-            const lang = getCurrentLanguage();
-            const t = translations[lang] || translations.en;
             const n = document.createElement('div');
             n.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;color:#fff;padding:14px 18px;border-radius:10px;z-index:1001`; 
-            n.textContent = t.noDeliveries || 'No deliveries on this day';
+            n.textContent = t('noDeliveries') || 'No deliveries on this day';
             document.body.appendChild(n);
             setTimeout(() => n.remove(), 1800);
             return;
@@ -961,33 +967,48 @@ function generateExcelReport() {
             combinedDeliveries[key].quantity += delivery.quantity;
         });
 
-        const lang = getCurrentLanguage();
-        const t = translations[lang] || translations.en;
         const sep = (lang === 'bg') ? ';' : ',';
         const eol = '\r\n';
+        const displayCurrency = getCurrency();
+        
         let rows = [];
-        rows.push(`${t.store || 'Store'}${sep}${t.product || 'Product'}${sep}${t.quantity || 'Quantity'}${sep}${t.price || 'Price'} (${getCurrency()})${sep}${t.total || 'Total'} (${getCurrency()})`);
+        // Header
+        const header = [
+            t('store') || 'Store',
+            t('product') || 'Product',
+            t('quantity') || 'Quantity',
+            `${t('price') || 'Price'} (${displayCurrency})`,
+            `${t('total') || 'Total'} (${displayCurrency})`
+        ];
+        rows.push(header.join(sep));
+
         let grandTotal = 0;
         deliveryOrder.forEach(key => {
             const delivery = combinedDeliveries[key];
             const priceUSD = delivery.priceUSD ? Number(delivery.priceUSD) : 0;
-            const displayCurrency = getCurrency();
             const price = convertAmount(priceUSD, 'USD', displayCurrency);
-            const total = price * (delivery.quantity || 0);
-            grandTotal += convertAmount(priceUSD * (delivery.quantity || 0), 'USD', 'USD');
+            const qty = Number(delivery.quantity) || 0;
+            const total = price * qty;
+            grandTotal += (priceUSD * qty); // keep track in USD for accuracy
+            
             const locale = getLocaleForCurrency(displayCurrency);
             const priceStr = Number(price).toLocaleString(locale, {minimumFractionDigits:2, maximumFractionDigits:2});
             const totalStr = Number(total).toLocaleString(locale, {minimumFractionDigits:2, maximumFractionDigits:2});
+            
             const storeEsc = String(delivery.storeName || '').replace(/"/g, '""');
             const productEsc = String(delivery.productName || '').replace(/"/g, '""');
-            rows.push(`"${storeEsc}"${sep}"${productEsc}"${sep}${delivery.quantity}${sep}${priceStr} ${displayCurrency}${sep}${totalStr} ${displayCurrency}`);
+            
+            rows.push(`"${storeEsc}"${sep}"${productEsc}"${sep}${qty}${sep}${priceStr} ${displayCurrency}${sep}${totalStr} ${displayCurrency}`);
         });
 
-        const displayCurrency = getCurrency();
         const grandTotalDisplay = convertAmount(grandTotal, 'USD', displayCurrency);
         const grandLocale = getLocaleForCurrency(displayCurrency);
         const grandTotalStr = Number(grandTotalDisplay).toLocaleString(grandLocale, {minimumFractionDigits:2, maximumFractionDigits:2});
-        rows.push(['', '', '', '', `${t.sum || 'Sum'}: ${grandTotalStr} ${displayCurrency}`].join(sep));
+        
+        // Empty row
+        rows.push('');
+        // Sum row
+        rows.push(['', '', '', '', `${t('sum') || 'Sum'}: ${grandTotalStr} ${displayCurrency}`].join(sep));
 
         const csvContent = '\uFEFF' + rows.join(eol);
         console.log('CSV Content:', csvContent);
@@ -999,18 +1020,12 @@ function generateExcelReport() {
         link.download = `report-${dateKey}.csv`;
         link.style.display = 'none';
         document.body.appendChild(link);
-        console.log('Link created and appended:', link);
         
-        // Trigger the download with a small delay to ensure proper processing
         setTimeout(() => {
-            console.log('Clicking link');
             link.click();
-            // Clean up after a delay to ensure the download starts
             setTimeout(() => {
-                console.log('Cleaning up');
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
-                console.log('Cleanup complete');
             }, 100);
         }, 50);
 
@@ -1031,20 +1046,14 @@ function generateExcelReport() {
             box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
             text-align: center;
         `;
-        const lang2 = getCurrentLanguage();
-        const t2 = translations[lang2] || translations.en;
-        notification.textContent = t2.reportDownloaded || '✓ Report downloaded!';
+        notification.textContent = t('reportDownloaded') || '✓ Report downloaded!';
         document.body.appendChild(notification);
         setTimeout(() => notification.remove(), 2000);
-        console.log('Success notification shown');
     } catch (err) {
         console.error('generateExcelReport error:', err);
-        console.error('Stack:', err.stack);
-        const lang = getCurrentLanguage();
-        const t = translations[lang] || translations.en;
         const n = document.createElement('div');
         n.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#a00;color:#fff;padding:14px 18px;border-radius:10px;z-index:1001`;
-        n.textContent = (t.reportDownloadError) || 'Failed to generate report';
+        n.textContent = t('reportDownloadError') || 'Failed to generate report';
         document.body.appendChild(n);
         setTimeout(() => n.remove(), 2500);
     }
