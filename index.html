@@ -483,6 +483,31 @@ const translations = (window.i18n && window.i18n.translations) || {
     }
 };
 
+// Currency and exchange rates (used by generateExcelReport and DOMContentLoaded)
+const fallbackRates = { USD: 1, EUR: 0.92, BGN: 1.8 };
+let exchangeRates = null;
+
+function getCurrency() {
+    return localStorage.getItem('eps_currency') || 'EUR';
+}
+
+function getLocaleForCurrency(currency) {
+    if (currency === 'EUR' || currency === 'BGN') return 'bg-BG';
+    if (currency === 'USD') return 'en-US';
+    return 'en-US';
+}
+
+function convertAmount(amount, from, to) {
+    if (from === to) return Number(amount) || 0;
+    const rates = exchangeRates || fallbackRates;
+    const f = rates[from] || (from === 'USD' ? 1 : null);
+    const t = rates[to] || (to === 'USD' ? 1 : null);
+    if (!f || !t) return Number(amount) || 0;
+    const amountUSD = (from === 'USD') ? Number(amount) : (Number(amount) / f);
+    const result = (to === 'USD') ? amountUSD : (amountUSD * t);
+    return Number(result) || 0;
+}
+
 // Global helper functions
 function getCurrentLanguage() {
     return localStorage.getItem('eps_language') || 'en';
@@ -1314,10 +1339,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
-    // Currency / exchange rate helpers
-    const fallbackRates = { USD: 1, EUR: 0.92, BGN: 1.8 };
-    let exchangeRates = null; // rates with base USD (1 USD = X CUR)
-
     async function loadExchangeRates() {
         try {
             const resp = await fetch('https://api.exchangerate.host/latest?base=USD');
@@ -1331,29 +1352,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         exchangeRates = fallbackRates;
         return exchangeRates;
-    }
-
-    function getCurrency() {
-        return localStorage.getItem('eps_currency') || 'EUR';
-    }
-
-    function getLocaleForCurrency(currency) {
-        // Use Bulgarian locale for EUR/BGN (Bulgaria uses bg formatting), USD use en-US
-        if (currency === 'EUR' || currency === 'BGN') return 'bg-BG';
-        if (currency === 'USD') return 'en-US';
-        return 'en-US';
-    }
-
-    function convertAmount(amount, from, to) {
-        if (from === to) return Number(amount) || 0;
-        const rates = exchangeRates || fallbackRates;
-        const f = rates[from] || (from === 'USD' ? 1 : null);
-        const t = rates[to] || (to === 'USD' ? 1 : null);
-        if (!f || !t) return Number(amount) || 0;
-        // Convert from 'from' to USD, then to 'to'
-        const amountUSD = (from === 'USD') ? Number(amount) : (Number(amount) / f);
-        const result = (to === 'USD') ? amountUSD : (amountUSD * t);
-        return Number(result) || 0;
     }
 
     function getDistanceKm(lat1, lon1, lat2, lon2) {
